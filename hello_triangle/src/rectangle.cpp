@@ -96,14 +96,14 @@ int main() {
       "    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
       "}\n";
 
-  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+  glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
   glCompileShader(vertexShader);
 
   GLint success = 0;
   glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
   if (!success) {
     GLchar infoLog[512];
-    glGetShaderInfoLog(vertexShader, sizeof(infoLog), NULL, infoLog);
+    glGetShaderInfoLog(vertexShader, sizeof(infoLog), nullptr, infoLog);
     std::cerr << "glCompileShader failed" << infoLog << std::endl;
     return -1;
   }
@@ -123,12 +123,12 @@ int main() {
       "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
       "}\n";
 
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+  glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
   glCompileShader(fragmentShader);
   glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
   if (!success) {
     GLchar infoLog[512];
-    glGetShaderInfoLog(fragmentShader, sizeof(infoLog), NULL, infoLog);
+    glGetShaderInfoLog(fragmentShader, sizeof(infoLog), nullptr, infoLog);
     std::cerr << "glCompileShader failed" << infoLog << std::endl;
     return -1;
   }
@@ -145,7 +145,7 @@ int main() {
   glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
   if (!success) {
     GLchar infoLog[512];
-    glGetProgramInfoLog(shaderProgram, sizeof(infoLog), NULL, infoLog);
+    glGetProgramInfoLog(shaderProgram, sizeof(infoLog), nullptr, infoLog);
     std::cerr << "glGetProgramInfoLog failed" << infoLog << std::endl;
     return -1;
   }
