@@ -1,4 +1,5 @@
 #include <glad/glad.h>
+#include <gsl/gsl>
 
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -20,6 +21,8 @@ int main() {
   if (glfwInit() != GL_TRUE) {
     std::cerr << "glfwInit failed" << std::endl;
   }
+  auto cleanup=gsl::finally([]() { glfwTerminate(); });
+
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -32,7 +35,6 @@ int main() {
       glfwCreateWindow(800, 600, "LearnOpenGL", nullptr, nullptr);
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
-    glfwTerminate();
     return -1;
   }
   glfwMakeContextCurrent(window);
@@ -83,7 +85,6 @@ int main() {
   auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
   if (vertexShader == 0) {
     std::cout << "glCreateShader failed" << std::endl;
-    glfwTerminate();
     return -1;
   }
 
@@ -167,6 +168,5 @@ int main() {
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
-  glfwTerminate();
   return 0;
 }
