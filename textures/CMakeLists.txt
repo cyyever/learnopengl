@@ -20,8 +20,7 @@ FOREACH(prog texture mix_textures)
   ADD_EXECUTABLE(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/src/${prog}.cpp ${glad_DIR}/src/glad.c)
   TARGET_LINK_LIBRARIES(${prog} PRIVATE OpenGL::GL glfw ${CMAKE_DL_LIBS})
   TARGET_INCLUDE_DIRECTORIES(${prog} PRIVATE ${glad_DIR}/include)
-  TARGET_COMPILE_DEFINITIONS(${prog} PRIVATE RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../resource)
   add_custom_command(TARGET ${prog} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resource ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/resource
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../resource ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/resource
     )
 ENDFOREACH()
