@@ -18,7 +18,7 @@ SET(glad_DIR ${CMAKE_CURRENT_BINARY_DIR}/glad)
 ADD_CUSTOM_COMMAND(OUTPUT ${glad_DIR}/src/glad.c COMMAND ${glad_binary} --reproducible --profile core --generator=c --spec gl --out-path=${glad_DIR})
 
 
-FOREACH(prog rotated_camera moving_camera)
+FOREACH(prog rotated_camera keyboard_camera complete_camera)
   ADD_EXECUTABLE(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/src/${prog}.cpp ${glad_DIR}/src/glad.c)
   TARGET_LINK_LIBRARIES(${prog} PRIVATE OpenGL::GL glfw ${CMAKE_DL_LIBS} glm)
   TARGET_INCLUDE_DIRECTORIES(${prog} PRIVATE ${glad_DIR}/include)
