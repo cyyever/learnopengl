@@ -86,8 +86,7 @@ int main() {
 
   opengl::program prog;
 
-  if (!prog.attach_shader(
-          GL_VERTEX_SHADER,
+  if (!prog.attach_shader( GL_VERTEX_SHADER,
           "#version 330 core\n"
           "layout (location = 0) in vec3 aPos;\n"
           "\n"

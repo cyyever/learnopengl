@@ -22,7 +22,8 @@ public:
   program(program &&) noexcept = default;
   program &operator=(program &&) noexcept = default;
 
-  bool attach_shader(GLenum shader_type, std::string_view source_code) {
+  bool attach_shader(GLenum shader_type,
+                     std::string_view source_code) noexcept {
     auto shader_id = glCreateShader(shader_type);
     if (shader_id == 0) {
       std::cout << "glCreateShader failed" << std::endl;
@@ -48,7 +49,7 @@ public:
     return true;
   }
 
-  bool use() {
+  bool use() noexcept {
     if (!linked) {
       glLinkProgram(program_id);
 
@@ -64,6 +65,8 @@ public:
     glUseProgram(program_id);
     return true;
   }
+
+  GLuint get_program_id() const noexcept { return program_id; }
 
 private:
   GLuint program_id{0};
