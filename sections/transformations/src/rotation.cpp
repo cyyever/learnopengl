@@ -183,10 +183,10 @@ int main() {
     return -1;
   }
 
-  if(!prog.set_uniform("texture1",0)) {
+  if (!prog.set_uniform("texture1", 0)) {
     return -1;
   }
-  if(!prog.set_uniform("texture2",1)) {
+  if (!prog.set_uniform("texture2", 1)) {
     return -1;
   }
 
@@ -198,17 +198,15 @@ int main() {
 
     glBindVertexArray(VAO);
 
-    if (!prog.use()) {
-      return -1;
-    }
-
     glm::mat4 trans(1.0f);
     trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
     trans =
         glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    prog.set_uniform_by_callback("transform", [&trans](auto location){
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans));
-	});
+    if (!prog.set_uniform_by_callback("transform", [&trans](auto location) {
+          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans));
+        })) {
+      return -1;
+    }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

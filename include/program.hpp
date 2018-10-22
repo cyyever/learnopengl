@@ -24,12 +24,12 @@ public:
 
   bool attach_shader(GLenum shader_type,
                      std::string_view source_code) noexcept {
-    auto shader_id = glCreateShader(shader_type);
+    const auto shader_id = glCreateShader(shader_type);
     if (shader_id == 0) {
-      std::cout << "glCreateShader failed" << std::endl;
+      std::cerr << "glCreateShader failed" << std::endl;
       return false;
     }
-    auto source_data = source_code.data();
+    const auto source_data = source_code.data();
     GLint source_size = source_code.size();
 
     glShaderSource(shader_id, 1, &source_data, &source_size);
@@ -49,7 +49,48 @@ public:
     return true;
   }
 
-  bool use() noexcept {
+  bool use() {
+    if (!link()) {
+      return false;
+    }
+    glUseProgram(program_id);
+    return true;
+  }
+
+  bool
+  set_uniform_by_callback(const std::string &variable_name,
+                          std::function<void(GLint location)> set_function) {
+    if (!link()) {
+      return false;
+    }
+    auto location = glGetUniformLocation(program_id, variable_name.c_str());
+    if (location == -1) {
+      std::cerr << "glGetUniformLocation failed" << std::endl;
+      return false;
+    }
+    set_function(location);
+    return true;
+  }
+
+  template <typename value_type>
+  bool set_uniform(const std::string &variable_name,
+                   value_type value) noexcept {
+    if constexpr (std::is_same_v<value_type, GLint>) {
+      return set_uniform_by_callback(variable_name, [value](auto location) {
+        glUniform1i(location, value);
+      });
+    } else if constexpr (std::is_same_v<value_type, GLfloat>) {
+      return set_uniform_by_callback(variable_name, [value](auto location) {
+        glUniform1f(location, value);
+      });
+    } else {
+      static_assert("not supported value type");
+    }
+    return false;
+  }
+
+private:
+  bool link() {
     if (!linked) {
       glLinkProgram(program_id);
 
@@ -61,35 +102,10 @@ public:
         std::cerr << "glLinkProgram failed" << infoLog << std::endl;
         return false;
       }
-      linked=true;
+      linked = true;
     }
-    glUseProgram(program_id);
     return true;
   }
-
-  bool set_uniform_by_callback(const std::string& variable_name,std::function<void (GLint location)> set_function) {
-    auto location=glGetUniformLocation(program_id,variable_name.c_str());
-    if(location==-1) {
-        std::cerr << "glGetUniformLocation failed" << std::endl;
-        return false;
-    }
-    set_function(location);
-    return true;
-  }
-
-  template<typename value_type>
-  bool set_uniform(const std::string& variable_name,value_type value) noexcept {
-    if constexpr (std::is_same_v<value_type,GLint>) {
-      set_uniform_by_callback(variable_name, [value](auto location){glUniform1i(location,value);});
-    }else if constexpr (std::is_same_v<value_type,GLfloat>) {
-      set_uniform_by_callback(variable_name, [value](auto location){glUniform1f(location,value);});
-    } else {
-      static_assert("not supported value type");
-      return false;
-    } 
-      return true;
-  }
-
 
 private:
   GLuint program_id{0};
