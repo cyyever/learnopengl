@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include "program.hpp"
+
 namespace {
 void framebuffer_size_callback(GLFWwindow * /*window*/, int width, int height) {
   glViewport(0, 0, width, height);
@@ -21,7 +23,7 @@ int main() {
   if (glfwInit() != GL_TRUE) {
     std::cerr << "glfwInit failed" << std::endl;
   }
-  auto cleanup=gsl::finally([]() { glfwTerminate(); });
+  auto cleanup = gsl::finally([]() { glfwTerminate(); });
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -82,77 +84,30 @@ int main() {
   glBindVertexArray(0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  if (vertexShader == 0) {
-    std::cout << "glCreateShader failed" << std::endl;
+  opengl::program prog;
+
+  if (!prog.attach_shader(
+          GL_VERTEX_SHADER,
+          "#version 330 core\n"
+          "layout (location = 0) in vec3 aPos;\n"
+          "\n"
+          "void main()\n"
+          "{\n"
+          "    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+          "}\n")) {
     return -1;
   }
 
-  const GLchar *vertexShaderSource =
-      "#version 330 core\n"
-      "layout (location = 0) in vec3 aPos;\n"
-      "\n"
-      "void main()\n"
-      "{\n"
-      "    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-      "}\n";
-
-  glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-  glCompileShader(vertexShader);
-
-  GLint success = 0;
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(vertexShader, sizeof(infoLog), nullptr, infoLog);
-    std::cerr << "glCompileShader failed" << infoLog << std::endl;
+  if (!prog.attach_shader(GL_FRAGMENT_SHADER,
+                          "#version 330 core\n"
+                          "out vec4 FragColor;\n"
+                          "\n"
+                          "void main()\n"
+                          "{\n"
+                          "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                          "}\n")) {
     return -1;
   }
-
-  auto fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  if (fragmentShader == 0) {
-    std::cout << "glCreateShader failed" << std::endl;
-    return -1;
-  }
-
-  const GLchar *fragmentShaderSource =
-      "#version 330 core\n"
-      "out vec4 FragColor;\n"
-      "\n"
-      "void main()\n"
-      "{\n"
-      "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-      "}\n";
-
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-  glCompileShader(fragmentShader);
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(fragmentShader, sizeof(infoLog), nullptr, infoLog);
-    std::cerr << "glCompileShader failed" << infoLog << std::endl;
-    return -1;
-  }
-
-  auto shaderProgram = glCreateProgram();
-  if (shaderProgram == 0) {
-    std::cout << "glCreateProgram failed" << std::endl;
-    return -1;
-  }
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetProgramInfoLog(shaderProgram, sizeof(infoLog), nullptr, infoLog);
-    std::cerr << "glGetProgramInfoLog failed" << infoLog << std::endl;
-    return -1;
-  }
-
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -161,7 +116,9 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(VAO);
-    glUseProgram(shaderProgram);
+    if (!prog.use()) {
+      return -1;
+    }
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
