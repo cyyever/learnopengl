@@ -12,43 +12,44 @@
 #include <stb_image.h>
 
 namespace {
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-float deltaTime = 0.0f;	// Time between current frame and last frame
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float deltaTime = 0.0f; // Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 float lastX = 400, lastY = 300;
-float yaw=-90.0f;
-float pitch=0.0f;
-bool firstMouse=false;
-float fov=45.0f;
+float yaw = -90.0f;
+float pitch = 0.0f;
+bool firstMouse = false;
+float fov = 45.0f;
 
 void framebuffer_size_callback(GLFWwindow * /*window*/, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-  if(firstMouse) // this bool variable is initially set to true
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+  if (firstMouse) // this bool variable is initially set to true
   {
     lastX = xpos;
     lastY = ypos;
     firstMouse = false;
   }
   float xoffset = xpos - lastX;
-  float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+  float yoffset =
+      lastY - ypos; // reversed since y-coordinates range from bottom to top
   lastX = xpos;
   lastY = ypos;
 
   float sensitivity = 0.05f;
   xoffset *= sensitivity;
   yoffset *= sensitivity;
-  yaw   += xoffset;
-  pitch += yoffset; 
+  yaw += xoffset;
+  pitch += yoffset;
 
-  if(pitch > 89.0f)
-      pitch =  89.0f;
-  if(pitch < -89.0f)
-      pitch = -89.0f;
+  if (pitch > 89.0f)
+    pitch = 89.0f;
+  if (pitch < -89.0f)
+    pitch = -89.0f;
 
   glm::vec3 front;
   front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
@@ -57,14 +58,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   cameraFront = glm::normalize(front);
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    if(fov >= 1.0f && fov <= 45.0f)
-        	fov -= yoffset;
-      if(fov <= 1.0f)
-	  	fov = 1.0f;
-        if(fov >= 45.0f)
-	    	fov = 45.0f;
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  if (fov >= 1.0f && fov <= 45.0f)
+    fov -= yoffset;
+  if (fov <= 1.0f)
+    fov = 1.0f;
+  if (fov >= 45.0f)
+    fov = 45.0f;
 }
 
 void processInput(GLFWwindow *window) {
@@ -77,9 +77,11 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     cameraPos -= cameraSpeed * cameraFront;
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    cameraPos -=
+        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    cameraPos +=
+        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 } // namespace
@@ -88,7 +90,7 @@ int main() {
   if (glfwInit() != GL_TRUE) {
     std::cerr << "glfwInit failed" << std::endl;
   }
-  auto cleanup=gsl::finally([]() { glfwTerminate(); });
+  auto cleanup = gsl::finally([]() { glfwTerminate(); });
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -107,9 +109,9 @@ int main() {
   glfwMakeContextCurrent(window);
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
-  glfwSetScrollCallback(window, scroll_callback); 
+  glfwSetScrollCallback(window, scroll_callback);
 
   // glad: load all OpenGL function pointers
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -124,19 +126,22 @@ int main() {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture1);
 
-  // set the texture wrapping/filtering options (on the currently bound texture object)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+  // set the texture wrapping/filtering options (on the currently bound texture
+  // object)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   int width, height, nrChannels;
-  auto *data = stbi_load("resource/container.jpg", &width, &height,&nrChannels, 0); 
-  if(!data) {
+  auto *data =
+      stbi_load("resource/container.jpg", &width, &height, &nrChannels, 0);
+  if (!data) {
     std::cout << "stbi_load failed" << std::endl;
     return -1;
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(data);
 
@@ -145,68 +150,47 @@ int main() {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, texture2);
 
-  // set the texture wrapping/filtering options (on the currently bound texture object)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+  // set the texture wrapping/filtering options (on the currently bound texture
+  // object)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  data = stbi_load("resource/awesomeface.png", &width, &height,&nrChannels, 0);
-  if(!data) {
+  data = stbi_load("resource/awesomeface.png", &width, &height, &nrChannels, 0);
+  if (!data) {
     std::cout << "stbi_load failed" << std::endl;
     return -1;
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(data);
 
+  float vertices[] = {
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+      0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
 
-float vertices[] = {
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
-
-
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
 
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
@@ -218,11 +202,12 @@ float vertices[] = {
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
   // position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1); 
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -236,19 +221,19 @@ float vertices[] = {
   }
 
   const GLchar *vertexShaderSource =
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec2 aTexCoord;\n"
-"uniform mat4 model;\n"
-"uniform mat4 view;\n"
-"uniform mat4 projection;\n"
-"out vec2 TexCoord;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-"    TexCoord = aTexCoord;\n"
-"}\n";
+      "#version 330 core\n"
+      "layout (location = 0) in vec3 aPos;\n"
+      "layout (location = 1) in vec2 aTexCoord;\n"
+      "uniform mat4 model;\n"
+      "uniform mat4 view;\n"
+      "uniform mat4 projection;\n"
+      "out vec2 TexCoord;\n"
+      "\n"
+      "void main()\n"
+      "{\n"
+      "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+      "    TexCoord = aTexCoord;\n"
+      "}\n";
 
   glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
   glCompileShader(vertexShader);
@@ -269,18 +254,19 @@ float vertices[] = {
   }
 
   const GLchar *fragmentShaderSource =
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"  \n"
-"in vec2 TexCoord;\n"
-"\n"
-"uniform sampler2D texture1;\n"
-"uniform sampler2D texture2;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);\n"
-"}\n";
+      "#version 330 core\n"
+      "out vec4 FragColor;\n"
+      "  \n"
+      "in vec2 TexCoord;\n"
+      "\n"
+      "uniform sampler2D texture1;\n"
+      "uniform sampler2D texture2;\n"
+      "\n"
+      "void main()\n"
+      "{\n"
+      "    FragColor = mix(texture(texture1, TexCoord), texture(texture2, "
+      "TexCoord), 0.2);\n"
+      "}\n";
 
   glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
   glCompileShader(fragmentShader);
@@ -313,23 +299,19 @@ float vertices[] = {
   glDeleteShader(fragmentShader);
 
   glUseProgram(shaderProgram);
-  glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); // set it manually
-  glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // set it manually
+  glUniform1i(glGetUniformLocation(shaderProgram, "texture1"),
+              0); // set it manually
+  glUniform1i(glGetUniformLocation(shaderProgram, "texture2"),
+              1); // set it manually
 
   glEnable(GL_DEPTH_TEST);
 
   glm::vec3 cubePositions[] = {
-      glm::vec3( 0.0f,  0.0f,  0.0f), 
-        glm::vec3( 2.0f,  5.0f, -15.0f), 
-	  glm::vec3(-1.5f, -2.2f, -2.5f),  
-	    glm::vec3(-3.8f, -2.0f, -12.3f),  
-	      glm::vec3( 2.4f, -0.4f, -3.5f),  
-	        glm::vec3(-1.7f,  3.0f, -7.5f),  
-		  glm::vec3( 1.3f, -2.0f, -2.5f),  
-		    glm::vec3( 1.5f,  2.0f, -2.5f), 
-		      glm::vec3( 1.5f,  0.2f, -1.5f), 
-		        glm::vec3(-1.3f,  1.0f, -1.5f)  
-  };
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -342,24 +324,25 @@ float vertices[] = {
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;  
+    lastFrame = currentFrame;
 
     glm::mat4 view(1.0f);
     view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     glm::mat4 projection(1.0f);
-    projection = glm::perspective(glm::radians(fov),  800.0f/600, 0.1f, 100.0f);
+    projection =
+        glm::perspective(glm::radians(fov), 800.0f / 600, 0.1f, 100.0f);
 
     auto viewLoc = glGetUniformLocation(shaderProgram, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     auto projectionLoc = glGetUniformLocation(shaderProgram, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    for(size_t i = 0; i < sizeof(cubePositions)/sizeof(glm::vec3); i++)
-    {
+    for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
       glm::mat4 model(1.0f);
       model = glm::translate(model, cubePositions[i]);
-      float angle = 20.0f * i; 
-      model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+      float angle = 20.0f * i;
+      model =
+          glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
       auto modelLoc = glGetUniformLocation(shaderProgram, "model");
       glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
