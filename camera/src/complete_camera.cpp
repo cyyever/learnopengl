@@ -50,12 +50,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   if(pitch < -89.0f)
       pitch = -89.0f;
 
-  std::cout<<"pitch="<<pitch<<" yaw="<<yaw<<std::endl;
   glm::vec3 front;
   front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
   front.y = sin(glm::radians(pitch));
   front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-  std::cout<<"x="<<front.x<<" y="<<front.y<<" z="<<front.z<<std::endl;
   cameraFront = glm::normalize(front);
 }
 
