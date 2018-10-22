@@ -183,10 +183,12 @@ int main() {
     return -1;
   }
 
-  glUniform1i(glGetUniformLocation(prog.get_program_id(), "texture1"),
-              0); // set it manually
-  glUniform1i(glGetUniformLocation(prog.get_program_id(), "texture2"),
-              1); // set it manually
+  if(!prog.set_uniform("texture1",0)) {
+    return -1;
+  }
+  if(!prog.set_uniform("texture2",1)) {
+    return -1;
+  }
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -204,9 +206,9 @@ int main() {
     trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
     trans =
         glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    auto transformLoc =
-        glGetUniformLocation(prog.get_program_id(), "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+    prog.set_uniform_by_callback("transform", [&trans](auto location){
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans));
+	});
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

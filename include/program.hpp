@@ -61,12 +61,33 @@ public:
         std::cerr << "glLinkProgram failed" << infoLog << std::endl;
         return false;
       }
+      linked=true;
     }
     glUseProgram(program_id);
     return true;
   }
 
-  GLuint get_program_id() const noexcept { return program_id; }
+  bool set_uniform_by_callback(const std::string& variable_name,std::function<void (GLint location)> set_function) {
+    auto location=glGetUniformLocation(program_id,variable_name.c_str());
+    if(location==-1) {
+        std::cerr << "glGetUniformLocation failed" << std::endl;
+        return false;
+    }
+    set_function(location);
+    return true;
+  }
+
+  template<typename value_type>
+  bool set_uniform(const std::string& variable_name,value_type value) noexcept {
+    if constexpr (std::is_integral_v<value_type>) {
+      set_uniform_by_callback(variable_name, [value](auto location){glUniform1i(location,value);});
+    } else {
+      static_assert("not supported value type");
+      return false;
+    } 
+      return true;
+  }
+
 
 private:
   GLuint program_id{0};
