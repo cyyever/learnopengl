@@ -79,8 +79,10 @@ public:
 
   template<typename value_type>
   bool set_uniform(const std::string& variable_name,value_type value) noexcept {
-    if constexpr (std::is_integral_v<value_type>) {
+    if constexpr (std::is_same_v<value_type,GLint>) {
       set_uniform_by_callback(variable_name, [value](auto location){glUniform1i(location,value);});
+    }else if constexpr (std::is_same_v<value_type,GLfloat>) {
+      set_uniform_by_callback(variable_name, [value](auto location){glUniform1f(location,value);});
     } else {
       static_assert("not supported value type");
       return false;
