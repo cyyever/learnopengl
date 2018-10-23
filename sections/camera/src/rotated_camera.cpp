@@ -11,6 +11,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "program.hpp"
+#include "texture.hpp"
+
 namespace {
 void framebuffer_size_callback(GLFWwindow * /*window*/, int width, int height) {
   glViewport(0, 0, width, height);
@@ -54,53 +57,33 @@ int main() {
     return -1;
   }
 
-  stbi_set_flip_vertically_on_load(true);
-
-  GLuint texture1;
-  glGenTextures(1, &texture1);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture1);
+  opengl::texture texture1(GL_TEXTURE_2D, GL_TEXTURE0,
+                           "resource/container.jpg");
 
   // set the texture wrapping/filtering options (on the currently bound texture
   // object)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  texture1.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
+  texture1.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+  texture1.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  texture1.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  int width, height, nrChannels;
-  auto *data =
-      stbi_load("resource/container.jpg", &width, &height, &nrChannels, 0);
-  if (!data) {
-    std::cout << "stbi_load failed" << std::endl;
+  if (!texture1.use()) {
     return -1;
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(data);
 
-  GLuint texture2;
-  glGenTextures(1, &texture2);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, texture2);
+  opengl::texture texture2(GL_TEXTURE_2D, GL_TEXTURE1,
+                           "resource/awesomeface.png");
 
   // set the texture wrapping/filtering options (on the currently bound texture
   // object)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  texture2.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
+  texture2.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+  texture2.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  texture2.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  data = stbi_load("resource/awesomeface.png", &width, &height, &nrChannels, 0);
-  if (!data) {
-    std::cout << "stbi_load failed" << std::endl;
+  if (!texture2.use()) {
     return -1;
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(data);
 
   float vertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
@@ -149,95 +132,53 @@ int main() {
   glBindVertexArray(0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  if (vertexShader == 0) {
-    std::cout << "glCreateShader failed" << std::endl;
+  opengl::program prog;
+  if (!prog.attach_shader(
+          GL_VERTEX_SHADER,
+          "#version 330 core\n"
+          "layout (location = 0) in vec3 aPos;\n"
+          "layout (location = 1) in vec2 aTexCoord;\n"
+          "uniform mat4 model;\n"
+          "uniform mat4 view;\n"
+          "uniform mat4 projection;\n"
+          "out vec2 TexCoord;\n"
+          "\n"
+          "void main()\n"
+          "{\n"
+          "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+          "    TexCoord = aTexCoord;\n"
+          "}\n")) {
     return -1;
   }
 
-  const GLchar *vertexShaderSource =
-      "#version 330 core\n"
-      "layout (location = 0) in vec3 aPos;\n"
-      "layout (location = 1) in vec2 aTexCoord;\n"
-      "uniform mat4 model;\n"
-      "uniform mat4 view;\n"
-      "uniform mat4 projection;\n"
-      "out vec2 TexCoord;\n"
-      "\n"
-      "void main()\n"
-      "{\n"
-      "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-      "    TexCoord = aTexCoord;\n"
-      "}\n";
-
-  glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-  glCompileShader(vertexShader);
-
-  GLint success = 0;
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(vertexShader, sizeof(infoLog), nullptr, infoLog);
-    std::cerr << "glCompileShader failed" << infoLog << std::endl;
+  if (!prog.attach_shader(
+          GL_FRAGMENT_SHADER,
+          "#version 330 core\n"
+          "out vec4 FragColor;\n"
+          "  \n"
+          "in vec2 TexCoord;\n"
+          "\n"
+          "uniform sampler2D texture1;\n"
+          "uniform sampler2D texture2;\n"
+          "\n"
+          "void main()\n"
+          "{\n"
+          "    FragColor = mix(texture(texture1, TexCoord), texture(texture2, "
+          "TexCoord), 0.2);\n"
+          "}\n")) {
     return -1;
   }
 
-  auto fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  if (fragmentShader == 0) {
-    std::cout << "glCreateShader failed" << std::endl;
+  if (!prog.set_uniform("texture1", texture1)) {
+    return -1;
+  }
+  if (!prog.set_uniform("texture2", texture2)) {
     return -1;
   }
 
-  const GLchar *fragmentShaderSource =
-      "#version 330 core\n"
-      "out vec4 FragColor;\n"
-      "  \n"
-      "in vec2 TexCoord;\n"
-      "\n"
-      "uniform sampler2D texture1;\n"
-      "uniform sampler2D texture2;\n"
-      "\n"
-      "void main()\n"
-      "{\n"
-      "    FragColor = mix(texture(texture1, TexCoord), texture(texture2, "
-      "TexCoord), 0.2);\n"
-      "}\n";
-
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-  glCompileShader(fragmentShader);
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(fragmentShader, sizeof(infoLog), nullptr, infoLog);
-    std::cerr << "glCompileShader failed" << infoLog << std::endl;
+  if (!prog.use()) {
     return -1;
   }
-
-  auto shaderProgram = glCreateProgram();
-  if (shaderProgram == 0) {
-    std::cout << "glCreateProgram failed" << std::endl;
-    return -1;
-  }
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetProgramInfoLog(shaderProgram, sizeof(infoLog), nullptr, infoLog);
-    std::cerr << "glGetProgramInfoLog failed" << infoLog << std::endl;
-    return -1;
-  }
-
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
-
-  glUseProgram(shaderProgram);
-  glUniform1i(glGetUniformLocation(shaderProgram, "texture1"),
-              0); // set it manually
-  glUniform1i(glGetUniformLocation(shaderProgram, "texture2"),
-              1); // set it manually
 
   glEnable(GL_DEPTH_TEST);
 
@@ -248,6 +189,16 @@ int main() {
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
+  glm::mat4 projection(1.0f);
+  projection =
+      glm::perspective(glm::radians(45.0f), 800.0f / 600, 0.1f, 100.0f);
+
+  if (!prog.set_uniform_by_callback("projection", [&projection](auto location) {
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(projection));
+      })) {
+    return -1;
+  }
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -255,7 +206,6 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindVertexArray(VAO);
-    glUseProgram(shaderProgram);
 
     float radius = 10.0f;
     float camX = sin(glfwGetTime()) * radius;
@@ -263,14 +213,12 @@ int main() {
     glm::mat4 view(1.0f);
     view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f),
                        glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 projection(1.0f);
-    projection =
-        glm::perspective(glm::radians(45.0f), 800.0f / 600, 0.1f, 100.0f);
 
-    auto viewLoc = glGetUniformLocation(shaderProgram, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    auto projectionLoc = glGetUniformLocation(shaderProgram, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    if (!prog.set_uniform_by_callback("view", [&view](auto location) {
+          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(view));
+        })) {
+      return -1;
+    }
 
     for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
       glm::mat4 model(1.0f);
@@ -278,8 +226,11 @@ int main() {
       float angle = 20.0f * i;
       model =
           glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-      auto modelLoc = glGetUniformLocation(shaderProgram, "model");
-      glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+      if (!prog.set_uniform_by_callback("model", [&model](auto location) {
+            glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(model));
+          })) {
+        return -1;
+      }
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
