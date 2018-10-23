@@ -86,18 +86,29 @@ int main() {
   }
 
   float vertices[] = {
-      // positions           // texture coords
-      0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // top right
-      0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f, 0.0f, 1.0f  // top left
-  };
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+      0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-  unsigned int indices[] = {
-      // note that we start from 0!
-      0, 1, 3, // first triangle
-      1, 2, 3  // second triangle
-  };
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+      -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
 
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
@@ -118,28 +129,25 @@ int main() {
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  GLuint EBO;
-  glGenBuffers(1, &EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
-
   glBindVertexArray(0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   opengl::program prog;
-  if (!prog.attach_shader(GL_VERTEX_SHADER,
-                          "#version 330 core\n"
-                          "layout (location = 0) in vec3 aPos;\n"
-                          "layout (location = 1) in vec2 aTexCoord;\n"
-                          "uniform mat4 transform;\n"
-                          "out vec2 TexCoord;\n"
-                          "\n"
-                          "void main()\n"
-                          "{\n"
-                          "    gl_Position = transform * vec4(aPos, 1.0);\n"
-                          "    TexCoord = aTexCoord;\n"
-                          "}\n")) {
+  if (!prog.attach_shader(
+          GL_VERTEX_SHADER,
+          "#version 330 core\n"
+          "layout (location = 0) in vec3 aPos;\n"
+          "layout (location = 1) in vec2 aTexCoord;\n"
+          "uniform mat4 model;\n"
+          "uniform mat4 view;\n"
+          "uniform mat4 projection;\n"
+          "out vec2 TexCoord;\n"
+          "\n"
+          "void main()\n"
+          "{\n"
+          "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+          "    TexCoord = aTexCoord;\n"
+          "}\n")) {
     return -1;
   }
 
@@ -171,25 +179,46 @@ int main() {
     return -1;
   }
 
+  glEnable(GL_DEPTH_TEST);
+
+  glm::mat4 view(1.0f);
+  // note that we're translating the scene in the reverse direction of where
+  // we want to move
+  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+  glm::mat4 projection(1.0f);
+  projection =
+      glm::perspective(glm::radians(45.0f), 800.0f / 600, 0.1f, 100.0f);
+
+  if (!prog.set_uniform_by_callback("view", [&view](auto location) {
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(view));
+      })) {
+    return -1;
+  }
+
+  if (!prog.set_uniform_by_callback("projection", [&projection](auto location) {
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(projection));
+      })) {
+    return -1;
+  }
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindVertexArray(VAO);
 
-    glm::mat4 trans(1.0f);
-    trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-    trans =
-        glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    if (!prog.set_uniform_by_callback("transform", [&trans](auto location) {
-          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans));
+    glm::mat4 model(1.0f);
+    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
+                        glm::vec3(0.5f, 1.0f, 0.0f));
+    if (!prog.set_uniform_by_callback("model", [&model](auto location) {
+          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(model));
         })) {
       return -1;
     }
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

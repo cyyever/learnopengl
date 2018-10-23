@@ -4,10 +4,6 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -71,26 +67,12 @@ int main() {
     return -1;
   }
 
-  opengl::texture texture2(GL_TEXTURE_2D, GL_TEXTURE1,
-                           "resource/awesomeface.png");
-
-  // set the texture wrapping/filtering options (on the currently bound texture
-  // object)
-  texture2.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-  texture2.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-  texture2.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  texture2.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  if (!texture2.use()) {
-    return -1;
-  }
-
   float vertices[] = {
-      // positions           // texture coords
-      0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // top right
-      0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f, 0.0f, 1.0f  // top left
+      // positions          // colors           // texture coords
+      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
   };
 
   unsigned int indices[] = {
@@ -109,12 +91,16 @@ int main() {
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
   // position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
-
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+  // color attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -131,13 +117,16 @@ int main() {
   if (!prog.attach_shader(GL_VERTEX_SHADER,
                           "#version 330 core\n"
                           "layout (location = 0) in vec3 aPos;\n"
-                          "layout (location = 1) in vec2 aTexCoord;\n"
-                          "uniform mat4 transform;\n"
+                          "layout (location = 1) in vec3 aColor;\n"
+                          "layout (location = 2) in vec2 aTexCoord;\n"
+                          "\n"
+                          "out vec3 ourColor;\n"
                           "out vec2 TexCoord;\n"
                           "\n"
                           "void main()\n"
                           "{\n"
-                          "    gl_Position = transform * vec4(aPos, 1.0);\n"
+                          "    gl_Position = vec4(aPos, 1.0);\n"
+                          "    ourColor = aColor;\n"
                           "    TexCoord = aTexCoord;\n"
                           "}\n")) {
     return -1;
@@ -147,30 +136,22 @@ int main() {
                           "#version 330 core\n"
                           "out vec4 FragColor;\n"
                           "  \n"
+                          "in vec3 ourColor;\n"
                           "in vec2 TexCoord;\n"
                           "\n"
-                          "uniform sampler2D texture1;\n"
-                          "uniform sampler2D texture2;\n"
+                          "uniform sampler2D ourTexture;\n"
                           "\n"
                           "void main()\n"
                           "{\n"
-                          "    FragColor = mix(texture(texture1, TexCoord), "
-                          "texture(texture2, TexCoord), 0.2);\n"
+                          "    FragColor = texture(ourTexture, TexCoord) * "
+                          "vec4(ourColor,1.0);\n"
                           "}\n")) {
-    return -1;
-  }
-
-  if (!prog.set_uniform("texture1", texture1)) {
-    return -1;
-  }
-  if (!prog.set_uniform("texture2", texture2)) {
     return -1;
   }
 
   if (!prog.use()) {
     return -1;
   }
-
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -178,17 +159,6 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(VAO);
-
-    glm::mat4 trans(1.0f);
-    trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-    trans =
-        glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    if (!prog.set_uniform_by_callback("transform", [&trans](auto location) {
-          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans));
-        })) {
-      return -1;
-    }
-
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);

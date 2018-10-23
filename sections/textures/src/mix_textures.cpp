@@ -4,10 +4,6 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -132,12 +128,12 @@ int main() {
                           "#version 330 core\n"
                           "layout (location = 0) in vec3 aPos;\n"
                           "layout (location = 1) in vec2 aTexCoord;\n"
-                          "uniform mat4 transform;\n"
+                          "\n"
                           "out vec2 TexCoord;\n"
                           "\n"
                           "void main()\n"
                           "{\n"
-                          "    gl_Position = transform * vec4(aPos, 1.0);\n"
+                          "    gl_Position = vec4(aPos, 1.0);\n"
                           "    TexCoord = aTexCoord;\n"
                           "}\n")) {
     return -1;
@@ -178,17 +174,6 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(VAO);
-
-    glm::mat4 trans(1.0f);
-    trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-    trans =
-        glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    if (!prog.set_uniform_by_callback("transform", [&trans](auto location) {
-          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(trans));
-        })) {
-      return -1;
-    }
-
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);

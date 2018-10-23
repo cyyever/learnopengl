@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string_view>
 
+#include "texture.hpp"
+
 namespace opengl {
 
 class program final {
@@ -22,6 +24,8 @@ public:
   program(program &&) noexcept = default;
   program &operator=(program &&) noexcept = default;
 
+  ~program() noexcept { glDeleteProgram(program_id); }
+
   bool attach_shader(GLenum shader_type,
                      std::string_view source_code) noexcept {
     const auto shader_id = glCreateShader(shader_type);
@@ -29,6 +33,7 @@ public:
       std::cerr << "glCreateShader failed" << std::endl;
       return false;
     }
+    auto cleanup = gsl::finally([shader_id]() { glDeleteShader(shader_id); });
     const auto source_data = source_code.data();
     GLint source_size = source_code.size();
 
@@ -45,7 +50,6 @@ public:
     }
     linked = false;
     glAttachShader(program_id, shader_id);
-    glDeleteShader(shader_id);
     return true;
   }
 
@@ -57,10 +61,10 @@ public:
     return true;
   }
 
-  bool
-  set_uniform_by_callback(const std::string &variable_name,
-                          std::function<void(GLint location)> set_function) {
-    if (!link()) {
+  bool set_uniform_by_callback(
+      const std::string &variable_name,
+      std::function<void(GLint location)> set_function) noexcept {
+    if (!use()) {
       return false;
     }
     auto location = glGetUniformLocation(program_id, variable_name.c_str());
@@ -69,19 +73,30 @@ public:
       return false;
     }
     set_function(location);
+    if (glGetError() != GL_NO_ERROR) {
+      std::cerr << "set_function failed" << std::endl;
+      return false;
+    }
     return true;
   }
 
   template <typename value_type>
   bool set_uniform(const std::string &variable_name,
-                   value_type value) noexcept {
-    if constexpr (std::is_same_v<value_type, GLint>) {
+                   const value_type &value) noexcept {
+
+    using real_value_type = typename std::remove_const<
+        std::remove_reference<value_type>::type>::type;
+    if constexpr (std::is_same_v<real_value_type, GLint>) {
       return set_uniform_by_callback(variable_name, [value](auto location) {
         glUniform1i(location, value);
       });
-    } else if constexpr (std::is_same_v<value_type, GLfloat>) {
+    } else if constexpr (std::is_same_v<real_value_type, GLfloat>) {
       return set_uniform_by_callback(variable_name, [value](auto location) {
         glUniform1f(location, value);
+      });
+    } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
+      return set_uniform_by_callback(variable_name, [&value](auto location) {
+        glUniform1i(location, value.get_unit() - GL_TEXTURE0);
       });
     } else {
       static_assert("not supported value type");
