@@ -21,8 +21,8 @@ public:
   program(const program &) = delete;
   program &operator=(const program &) = delete;
 
-  program(program &&) noexcept = default;
-  program &operator=(program &&) noexcept = default;
+  program(program &&) noexcept = delete;
+  program &operator=(program &&) noexcept = delete;
 
   ~program() noexcept { glDeleteProgram(program_id); }
 

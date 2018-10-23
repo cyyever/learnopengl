@@ -38,6 +38,12 @@ public:
     update_coordinate_system();
   }
 
+  camera(const camera &) = delete;
+  camera &operator=(const camera &) = delete;
+
+  camera(camera &&) noexcept = delete;
+  camera &operator=(camera &&) noexcept = delete;
+
   // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
   glm::mat4 get_view_matrix() {
     return glm::lookAt(position, position + front, up);

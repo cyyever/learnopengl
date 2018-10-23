@@ -5,6 +5,9 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#ifndef STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+#endif
 
 namespace opengl {
 
@@ -64,8 +67,8 @@ public:
   texture(const texture &) = delete;
   texture &operator=(const texture &) = delete;
 
-  texture(texture &&) noexcept = default;
-  texture &operator=(texture &&) noexcept = default;
+  texture(texture &&) noexcept = delete;
+  texture &operator=(texture &&) noexcept = delete;
 
   ~texture() noexcept { glDeleteTextures(1, &texture_id); }
 
