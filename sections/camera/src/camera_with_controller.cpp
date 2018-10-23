@@ -11,20 +11,20 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "camera.hpp"
 #include "program.hpp"
 #include "texture.hpp"
 
 namespace {
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+constexpr int screen_width = 800;
+constexpr int screen_height = 600;
+
+opengl::camera cube_camera({0.0f, 0.0f, 3.0f}, {0.0f, 1.0f, 0.0f},
+                           {0.0f, 0.0f, -1.0f});
 float deltaTime = 0.0f; // Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
-float lastX = 400, lastY = 300;
-float yaw = -90.0f;
-float pitch = 0.0f;
+float lastX = screen_width / 2, lastY = screen_height / 2;
 bool firstMouse = false;
-float fov = 45.0f;
 
 void framebuffer_size_callback(GLFWwindow * /*window*/, int width, int height) {
   glViewport(0, 0, width, height);
@@ -42,49 +42,25 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
       lastY - ypos; // reversed since y-coordinates range from bottom to top
   lastX = xpos;
   lastY = ypos;
-
-  float sensitivity = 0.05f;
-  xoffset *= sensitivity;
-  yoffset *= sensitivity;
-  yaw += xoffset;
-  pitch += yoffset;
-
-  if (pitch > 89.0f)
-    pitch = 89.0f;
-  if (pitch < -89.0f)
-    pitch = -89.0f;
-
-  glm::vec3 front;
-  front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-  front.y = sin(glm::radians(pitch));
-  front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-  cameraFront = glm::normalize(front);
+  cube_camera.lookat(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  if (fov >= 1.0f && fov <= 45.0f)
-    fov -= yoffset;
-  if (fov <= 1.0f)
-    fov = 1.0f;
-  if (fov >= 45.0f)
-    fov = 45.0f;
+  cube_camera.add_fov(yoffset);
 }
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
   }
-  float cameraSpeed = 2.5f * deltaTime;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    cameraPos += cameraSpeed * cameraFront;
+    cube_camera.move(opengl::camera::movement::forward, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    cameraPos -= cameraSpeed * cameraFront;
+    cube_camera.move(opengl::camera::movement::backward, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    cameraPos -=
-        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    cube_camera.move(opengl::camera::movement::left, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    cameraPos +=
-        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    cube_camera.move(opengl::camera::movement::right, deltaTime);
 }
 
 } // namespace
@@ -103,8 +79,8 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-  GLFWwindow *window =
-      glfwCreateWindow(800, 600, "LearnOpenGL", nullptr, nullptr);
+  GLFWwindow *window = glfwCreateWindow(screen_width, screen_height,
+                                        "LearnOpenGL", nullptr, nullptr);
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
     return -1;
@@ -266,16 +242,16 @@ int main() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    glm::mat4 view(1.0f);
-    view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    auto view = cube_camera.get_view_matrix();
     if (!prog.set_uniform_by_callback("view", [&view](auto location) {
           glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(view));
         })) {
       return -1;
     }
     glm::mat4 projection(1.0f);
-    projection =
-        glm::perspective(glm::radians(fov), 800.0f / 600, 0.1f, 100.0f);
+    projection = glm::perspective(
+        cube_camera.get_fov(), static_cast<float>(screen_width) / screen_height,
+        0.1f, 100.0f);
 
     if (!prog.set_uniform_by_callback("projection", [&projection](
                                                         auto location) {
