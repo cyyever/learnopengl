@@ -115,10 +115,10 @@ private:
 private:
   // camera Attributes
   glm::vec3 position;
+  glm::vec3 world_up;
   glm::vec3 front;
   glm::vec3 up;
   glm::vec3 right_unit_vector;
-  glm::vec3 world_up;
   float fov{45.0f};
   float movement_speed{2.5f};
   float lookat_sensitivity{0.05f};

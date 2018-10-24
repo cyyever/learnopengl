@@ -246,8 +246,7 @@ int main() {
         })) {
       return -1;
     }
-    glm::mat4 projection(1.0f);
-    projection = glm::perspective(
+    auto projection = glm::perspective(
         cube_camera.get_fov(), static_cast<float>(screen_width) / screen_height,
         0.1f, 100.0f);
 
