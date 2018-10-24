@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
+#include <glm/glm.hpp>
 
 #include "texture.hpp"
 
@@ -97,6 +98,10 @@ public:
     } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
       return set_uniform_by_callback(variable_name, [&value](auto location) {
         glUniform1i(location, value.get_unit() - GL_TEXTURE0);
+      });
+    } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
+      return set_uniform_by_callback(variable_name, [&value](auto location) {
+	  glUniform3fv(location, 1, &value[0]);
       });
     } else {
       static_assert("not supported value type");
