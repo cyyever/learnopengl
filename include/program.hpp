@@ -85,7 +85,7 @@ public:
                    const value_type &value) noexcept {
 
     using real_value_type = typename std::remove_const<
-        std::remove_reference<value_type>::type>::type;
+        typename std::remove_reference<value_type>::type>::type;
     if constexpr (std::is_same_v<real_value_type, GLint>) {
       return set_uniform_by_callback(variable_name, [value](auto location) {
         glUniform1i(location, value);

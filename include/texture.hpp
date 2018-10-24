@@ -5,16 +5,17 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#ifndef STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#endif
+#undef STB_IMAGE_IMPLEMENTATION
 
 namespace opengl {
 
 class texture final {
 public:
   struct extra_config {
-    bool generate_mipmap{true};
+    extra_config() : generate_mipmap{true} {};
+    bool generate_mipmap;
   };
 
   texture(GLenum target_, GLenum unit_, std::filesystem::path image)

@@ -11,8 +11,9 @@ FOREACH(prog ${progs})
 
   TARGET_SOURCES(${prog} PRIVATE ${glad_DIR}/src/glad.c)
   TARGET_LINK_LIBRARIES(${prog} PRIVATE OpenGL::GL glfw ${CMAKE_DL_LIBS} glm)
+  IF(cxxfs_lib)
+    TARGET_LINK_LIBRARIES(${prog} PRIVATE ${cxxfs_lib})
+  ENDIF()
   TARGET_INCLUDE_DIRECTORIES(${prog} PRIVATE ${glad_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/../include)
-  add_custom_command(TARGET ${prog} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/../resource ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/resource
-    )
+  ADD_CUSTOM_COMMAND(TARGET ${prog} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/../resource ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/resource)
 ENDFOREACH()
