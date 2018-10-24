@@ -4,7 +4,7 @@ PROJECT(Basic-Lighting)
 
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/../../cmake/packages.cmake)
 
-FOREACH(prog ambient_lighting diffuse_lighting)
+FOREACH(prog ambient_lighting diffuse_lighting specular_lighting)
   ADD_EXECUTABLE(${prog} ${CMAKE_CURRENT_LIST_DIR}/src/${prog}.cpp)
 ENDFOREACH()
 

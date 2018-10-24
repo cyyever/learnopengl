@@ -98,6 +98,8 @@ public:
 
   float get_fov() { return glm::radians(fov); }
 
+  const auto &get_position() const { return position; }
+
 private:
   void update_coordinate_system() {
     // Calculate the new front vector
