@@ -99,7 +99,7 @@ public:
     }
     set_function(location);
     if (glGetError() != GL_NO_ERROR) {
-      std::cerr << "set_function failed" << std::endl;
+      std::cerr << "set_function failed:" << variable_name << std::endl;
       return false;
     }
     return true;
