@@ -157,50 +157,13 @@ int main() {
   glEnableVertexAttribArray(0);
 
   opengl::program container_prog;
-  if (!container_prog.attach_shader(
-          GL_VERTEX_SHADER,
-          "#version 330 core\n"
-          "layout (location = 0) in vec3 aPos;\n"
-          "layout (location = 1) in vec3 aNormal;\n"
-          "uniform mat4 model;\n"
-          "uniform mat4 view;\n"
-          "uniform mat4 projection;\n"
-          "out vec3 Normal;\n"
-          "out vec3 FragPos;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-          "Normal = aNormal;\n"
-          "FragPos = vec3(model * vec4(aPos, 1.0));\n"
-          "Normal = aNormal;\n"
-          "}\n")) {
+  if (!container_prog.attach_shader_file(GL_VERTEX_SHADER,
+                                         "shader/diffuse_lighting.vs")) {
     return -1;
   }
 
-  if (!container_prog.attach_shader(
-          GL_FRAGMENT_SHADER,
-          "#version 330 core\n"
-          "in vec3 Normal;\n"
-          "in vec3 FragPos;\n"
-          "out vec4 FragColor;\n"
-          "  \n"
-          "uniform vec3 objectColor;\n"
-          "uniform vec3 lightColor;\n"
-          "uniform vec3 lightPos;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    float ambientStrength = 0.1;\n"
-          "    vec3 ambient = ambientStrength * lightColor;\n"
-          "\n"
-          "vec3 norm = normalize(Normal);\n"
-          "vec3 lightDir = normalize(lightPos - FragPos);\n"
-          "float diff = max(dot(norm, lightDir), 0.0);\n"
-          "vec3 diffuse = diff * lightColor;\n"
-          "vec3 result = (ambient + diffuse) * objectColor;\n"
-          "    FragColor = vec4(result, 1.0);\n"
-          "}\n")) {
+  if (!container_prog.attach_shader_file(GL_FRAGMENT_SHADER,
+                                         "shader/diffuse_lighting.fs")) {
     return -1;
   }
 
@@ -230,29 +193,11 @@ int main() {
   }
 
   opengl::program lamp_prog;
-  if (!lamp_prog.attach_shader(
-          GL_VERTEX_SHADER,
-          "#version 330 core\n"
-          "layout (location = 0) in vec3 aPos;\n"
-          "uniform mat4 model;\n"
-          "uniform mat4 view;\n"
-          "uniform mat4 projection;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-          "}\n")) {
+  if (!lamp_prog.attach_shader_file(GL_VERTEX_SHADER, "shader/lamp.vs")) {
     return -1;
   }
 
-  if (!lamp_prog.attach_shader(GL_FRAGMENT_SHADER,
-                               "#version 330 core\n"
-                               "out vec4 FragColor;\n"
-                               "  \n"
-                               "void main()\n"
-                               "{\n"
-                               "    FragColor = vec4(1.0);\n"
-                               "}\n")) {
+  if (!lamp_prog.attach_shader_file(GL_FRAGMENT_SHADER, "shader/lamp.fs")) {
     return -1;
   }
 

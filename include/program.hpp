@@ -1,9 +1,12 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
+#include <glm/glm.hpp>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string_view>
-#include <glm/glm.hpp>
 
 #include "texture.hpp"
 
@@ -26,6 +29,22 @@ public:
   program &operator=(program &&) noexcept = delete;
 
   ~program() noexcept { glDeleteProgram(program_id); }
+
+  bool attach_shader_file(GLenum shader_type,
+                          std::filesystem::path source_code) noexcept {
+    std::ifstream source_file(source_code);
+    std::stringstream sstream;
+    sstream << source_file.rdbuf();
+    if (source_file.fail() || source_file.bad()) {
+      std::cout << "read " << source_code << " failed";
+      return false;
+    }
+    if (!sstream) {
+      std::cout << "store " << source_code << " in stringstream failed";
+      return false;
+    }
+    return attach_shader(shader_type, sstream.str());
+  }
 
   bool attach_shader(GLenum shader_type,
                      std::string_view source_code) noexcept {
@@ -54,7 +73,7 @@ public:
     return true;
   }
 
-  bool use() {
+  bool use() noexcept {
     if (!link()) {
       return false;
     }
@@ -101,7 +120,7 @@ public:
       });
     } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
       return set_uniform_by_callback(variable_name, [&value](auto location) {
-	  glUniform3fv(location, 1, &value[0]);
+        glUniform3fv(location, 1, &value[0]);
       });
     } else {
       static_assert("not supported value type");

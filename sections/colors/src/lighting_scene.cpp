@@ -143,33 +143,13 @@ int main() {
   glEnableVertexAttribArray(0);
 
   opengl::program container_prog;
-  if (!container_prog.attach_shader(
-          GL_VERTEX_SHADER,
-          "#version 330 core\n"
-          "layout (location = 0) in vec3 aPos;\n"
-          "uniform mat4 model;\n"
-          "uniform mat4 view;\n"
-          "uniform mat4 projection;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-          "}\n")) {
+  if (!container_prog.attach_shader_file(GL_VERTEX_SHADER,
+                                         "shader/container.vs")) {
     return -1;
   }
 
-  if (!container_prog.attach_shader(
-          GL_FRAGMENT_SHADER,
-          "#version 330 core\n"
-          "out vec4 FragColor;\n"
-          "  \n"
-          "uniform vec3 objectColor;\n"
-          "uniform vec3 lightColor;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    FragColor = vec4(lightColor * objectColor, 1.0);\n"
-          "}\n")) {
+  if (!container_prog.attach_shader_file(GL_FRAGMENT_SHADER,
+                                         "shader/container.fs")) {
     return -1;
   }
 
@@ -195,29 +175,11 @@ int main() {
   }
 
   opengl::program lamp_prog;
-  if (!lamp_prog.attach_shader(
-          GL_VERTEX_SHADER,
-          "#version 330 core\n"
-          "layout (location = 0) in vec3 aPos;\n"
-          "uniform mat4 model;\n"
-          "uniform mat4 view;\n"
-          "uniform mat4 projection;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-          "}\n")) {
+  if (!lamp_prog.attach_shader_file(GL_VERTEX_SHADER, "shader/lamp.vs")) {
     return -1;
   }
 
-  if (!lamp_prog.attach_shader(GL_FRAGMENT_SHADER,
-                               "#version 330 core\n"
-                               "out vec4 FragColor;\n"
-                               "  \n"
-                               "void main()\n"
-                               "{\n"
-                               "    FragColor = vec4(1.0);\n"
-                               "}\n")) {
+  if (!lamp_prog.attach_shader_file(GL_FRAGMENT_SHADER, "shader/lamp.fs")) {
     return -1;
   }
 
