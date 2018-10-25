@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
+#include <tuple>
 
 #include "texture.hpp"
 
@@ -78,6 +79,10 @@ public:
       return false;
     }
     glUseProgram(program_id);
+    if (glGetError() != GL_NO_ERROR) {
+      std::cerr << "glUseProgram failed" << std::endl;
+      return false;
+    }
     return true;
   }
 
@@ -89,7 +94,7 @@ public:
     }
     auto location = glGetUniformLocation(program_id, variable_name.c_str());
     if (location == -1) {
-      std::cerr << "glGetUniformLocation failed" << std::endl;
+      std::cerr << "glGetUniformLocation failed:" << variable_name << std::endl;
       return false;
     }
     set_function(location);
@@ -100,31 +105,62 @@ public:
     return true;
   }
 
-  template <typename value_type>
+  template <typename... value_types>
   bool set_uniform(const std::string &variable_name,
-                   const value_type &value) noexcept {
+                   value_types &&... values) noexcept {
+    static_assert(sizeof...(values) != 0, "no value specified");
+    static_assert(sizeof...(values) == 1 || sizeof...(values) == 3,
+                  "unsupported number of values");
+    using first_value_type =
+        typename std::tuple_element<0, std::tuple<value_types...>>::type;
+    static_assert(
+        std::conjunction_v<std::is_same<first_value_type, value_types>...>,
+        "values should be the same type");
 
     using real_value_type = typename std::remove_const<
-        typename std::remove_reference<value_type>::type>::type;
-    if constexpr (std::is_same_v<real_value_type, GLint>) {
-      return set_uniform_by_callback(variable_name, [value](auto location) {
-        glUniform1i(location, value);
-      });
-    } else if constexpr (std::is_same_v<real_value_type, GLfloat>) {
-      return set_uniform_by_callback(variable_name, [value](auto location) {
-        glUniform1f(location, value);
-      });
-    } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
-      return set_uniform_by_callback(variable_name, [&value](auto location) {
-        glUniform1i(location, value.get_unit() - GL_TEXTURE0);
-      });
-    } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
-      return set_uniform_by_callback(variable_name, [&value](auto location) {
-        glUniform3fv(location, 1, &value[0]);
-      });
-    } else {
-      static_assert("not supported value type");
+        typename std::remove_reference<first_value_type>::type>::type;
+
+    if constexpr (sizeof...(values) == 1) {
+      auto &&value = std::get<0>(
+          std::forward_as_tuple(std::forward<value_types>(values)...));
+      if constexpr (std::is_same_v<real_value_type, GLint>) {
+        return set_uniform_by_callback(variable_name, [value](auto location) {
+          glUniform1i(location, value);
+        });
+      } else if constexpr (std::is_same_v<real_value_type, GLfloat>) {
+        return set_uniform_by_callback(variable_name, [value](auto location) {
+          glUniform1f(location, value);
+        });
+      } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
+        return set_uniform_by_callback(variable_name, [&value](auto location) {
+          glUniform1i(location, value.get_unit() - GL_TEXTURE0);
+        });
+      } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
+        return set_uniform_by_callback(variable_name, [&value](auto location) {
+          glUniform3fv(location, 1, &value[0]);
+        });
+      }
+    } else if constexpr (sizeof...(values) == 3) {
+      auto &&value1 = std::get<0>(
+          std::forward_as_tuple(std::forward<value_types>(values)...));
+      auto &&value2 = std::get<1>(
+          std::forward_as_tuple(std::forward<value_types>(values)...));
+      auto &&value3 = std::get<2>(
+          std::forward_as_tuple(std::forward<value_types>(values)...));
+
+      if constexpr (std::is_same_v<real_value_type, GLint>) {
+        return set_uniform_by_callback(
+            variable_name, [value1, value2, value3](auto location) {
+              glUniform3i(location, value1, value2, value3);
+            });
+      } else if constexpr (std::is_same_v<real_value_type, GLfloat>) {
+        return set_uniform_by_callback(
+            variable_name, [value1, value2, value3](auto location) {
+              glUniform3f(location, value1, value2, value3);
+            });
+      }
     }
+    std::cerr << "unsupported value types" << std::endl;
     return false;
   }
 
