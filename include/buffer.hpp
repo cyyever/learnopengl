@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glad/glad.h>
 #include <iostream>
 #include <stdexcept>
 
@@ -31,11 +32,7 @@ public:
   ~buffer() noexcept { glDeleteBuffers(1, &buffer_id); }
 
   template <size_t N> bool write(data_type (&const data)[N]) noexcept {
-    if constexpr (N == 0) {
-      std::cerr << "can't write empty array" << std::endl;
-      return false;
-    }
-
+    static_assert(N != 0, "can't write empty array");
     if (!bind()) {
       return false;
     }
@@ -59,10 +56,11 @@ public:
     if constexpr (std::is_same_v<GLint, data_type>) {
       type = GL_INT;
     }
-    glVertexAttribIPointer(index, size, type, stride * sizeof(data_type),
-                           (void *)offset);
+    glVertexAttribPointer(index, size, type, GL_FALSE,
+                          stride * sizeof(data_type),
+                          reinterpret_cast<void *>(offset * sizeof(data_type)));
     if (check_error()) {
-      std::cerr << "glVertexAttribIPointer failed" << std::endl;
+      std::cerr << "glVertexAttribPointer failed" << std::endl;
       return false;
     }
 

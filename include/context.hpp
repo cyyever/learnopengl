@@ -5,8 +5,8 @@
 #include <GLFW/glfw3.h>
 
 #include <functional>
+#include <gsl/gsl>
 #include <iostream>
-#include <memory>
 #include <optional>
 
 namespace opengl {
@@ -67,7 +67,7 @@ public:
 
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-      std::cout << "Failed to initialize GLAD" << std::endl;
+      std::cerr << "Failed to initialize GLAD" << std::endl;
       return {};
     }
 

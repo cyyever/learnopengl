@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "buffer.hpp"
 #include "camera.hpp"
 #include "context.hpp"
 #include "program.hpp"
@@ -115,36 +116,29 @@ int main() {
       -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f};
 
   // first, configure the cube's VAO (and VBO)
-  GLuint VBO, cubeVAO;
-  glGenVertexArrays(1, &cubeVAO);
-  glBindVertexArray(cubeVAO);
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  opengl::vertex_array cubeVAO;
+  opengl::buffer<GL_ARRAY_BUFFER, GLfloat> VBO;
+  if (!VBO.write(vertices)) {
+    return -1;
+  }
 
-  // position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
+  if (!VBO.vertex_attribute_pointer(0, 3, 8, 0)) {
+    return -1;
+  }
+  if (!VBO.vertex_attribute_pointer(1, 3, 8, 3)) {
+    return -1;
+  }
+  if (!VBO.vertex_attribute_pointer(2, 3, 8, 6)) {
+    return -1;
+  }
 
   // second, configure the light's VAO (VBO stays the same; the vertices are the
   // same for the light object which is also a 3D cube)
-  GLuint lightVAO;
-  glGenVertexArrays(1, &lightVAO);
-  glBindVertexArray(lightVAO);
+  opengl::vertex_array lightVAO;
 
-  // we only need to bind to the VBO (to link it with glVertexAttribPointer), no
-  // need to fill it; the VBO's data already contains all we need (it's already
-  // bound, but we do it again for educational purposes)
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
+  if (!VBO.vertex_attribute_pointer(0, 3, 8, 0)) {
+    return -1;
+  }
 
   opengl::program container_prog;
   if (!container_prog.attach_shader_file(GL_VERTEX_SHADER,
@@ -254,7 +248,9 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindVertexArray(cubeVAO);
+    if (!cubeVAO.use()) {
+      return -1;
+    }
 
     if (!container_prog.use()) {
       return -1;
@@ -280,7 +276,9 @@ int main() {
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    glBindVertexArray(lightVAO);
+    if (!lightVAO.use()) {
+      return -1;
+    }
 
     if (!lamp_prog.use()) {
       return -1;
