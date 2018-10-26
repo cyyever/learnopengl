@@ -6,8 +6,8 @@
 
 #include <functional>
 #include <iostream>
-#include <optional>
 #include <memory>
+#include <optional>
 
 namespace opengl {
 
@@ -15,47 +15,42 @@ class context final {
 public:
   class window final {
 
-    window()=delete;
-    window(const window &) = default;
-    window &operator=(const window &) = default;
+  public:
+    window() = delete;
+    window(const window &) = delete;
+    window &operator=(const window &) = delete;
 
     window(window &&) = default;
     window &operator=(window &&) = default;
 
-    ~window()=default;
+    ~window() = default;
 
-   // operator GLFWwindow *() const { return handler.get(); }
+    operator GLFWwindow *() const { return handler; }
 
-    private:
+  private:
     friend class context;
     window(GLFWwindow *handler_) : handler(handler_) {}
 
   private:
     GLFWwindow *handler;
-
-    /*
-    std::shared_ptr<GLFWwindow> handler{nullptr,[](auto p) {
-       glfwDestroyWindow(p);
-    }};
-    */
   };
   static std::optional<window> create(int window_width, int window_height,
                                       const std::string &title) {
-    // glad: load all OpenGL function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-      std::cout << "Failed to initialize GLAD" << std::endl;
-      return {};
-    }
 
     if (glfwInit() != GL_TRUE) {
       std::cerr << "glfwInit failed" << std::endl;
       return {};
     }
+
+    glfwSetErrorCallback([](int error, const char *description) {
+      std::cerr << "GLFW error code:" << error << " description:" << description
+                << std::endl;
+    });
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -63,15 +58,20 @@ public:
     auto glfw_window = glfwCreateWindow(window_width, window_height,
                                         title.c_str(), nullptr, nullptr);
     if (glfw_window == nullptr) {
-      std::cout << "Failed to create GLFW window" << std::endl;
+      std::cerr << "Failed to create GLFW window" << std::endl;
       return {};
     }
     window win(glfw_window);
 
-    /*
     glfwMakeContextCurrent(win);
 
-    GLint flags;
+    // glad: load all OpenGL function pointers
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+      std::cout << "Failed to initialize GLAD" << std::endl;
+      return {};
+    }
+
+    GLint flags = 0;
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
     if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
       glEnable(GL_DEBUG_OUTPUT);
@@ -80,20 +80,18 @@ public:
       glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
                             nullptr, GL_TRUE);
     }
-    return {};
-    */
-    return {win};
+    return {std::move(win)};
   }
 
 private:
-  static void debug_callback(GLenum source, GLenum type, GLuint id,
-                             GLenum severity, GLsizei length,
-                             const GLchar *message, const void *userParam) {
+  static void APIENTRY debug_callback(GLenum source, GLenum type, GLuint id,
+                                      GLenum severity, GLsizei length,
+                                      const GLchar *message,
+                                      const void *userParam) {
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
       return;
 
-    std::cout << "---------------" << std::endl;
     std::cout << "Debug message (" << id << "): " << message << std::endl;
 
     switch (source) {
@@ -163,7 +161,6 @@ private:
       std::cout << "Severity: notification";
       break;
     }
-    std::cout << std::endl;
     std::cout << std::endl;
   }
 

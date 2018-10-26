@@ -1,7 +1,3 @@
-#include <glad/glad.h>
-#include <gsl/gsl>
-
-#include <GLFW/glfw3.h>
 #include <iostream>
 
 #include <glm/glm.hpp>
@@ -9,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "camera.hpp"
+#include "context.hpp"
 #include "program.hpp"
 
 namespace {
@@ -66,37 +63,18 @@ void processInput(GLFWwindow *window) {
 } // namespace
 
 int main() {
-  if (glfwInit() != GL_TRUE) {
-    std::cerr << "glfwInit failed" << std::endl;
-  }
-  auto cleanup = gsl::finally([]() { glfwTerminate(); });
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-  GLFWwindow *window = glfwCreateWindow(screen_width, screen_height,
-                                        "LearnOpenGL", nullptr, nullptr);
-  if (window == nullptr) {
-    std::cout << "Failed to create GLFW window" << std::endl;
+  auto window_opt =
+      opengl::context::create(screen_width, screen_height, "LearnOpenGL");
+  if (!window_opt) {
+    std::cerr << "create opengl context failed" << std::endl;
     return -1;
   }
-  glfwMakeContextCurrent(window);
+  auto &window = window_opt.value();
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
-
-  // glad: load all OpenGL function pointers
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
-    return -1;
-  }
 
   float vertices[] = {
       // positions          // normals           // texture coords
