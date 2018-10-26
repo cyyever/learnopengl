@@ -147,7 +147,7 @@ int main() {
   }
 
   if (!container_prog.attach_shader_file(GL_FRAGMENT_SHADER,
-                                         "shader/point_lights.fs")) {
+                                         "shader/spotlight.fs")) {
     return -1;
   }
 
@@ -165,7 +165,7 @@ int main() {
   if (!container_prog.set_uniform("light.specular", 1.0f, 1.0f, 1.0f)) {
     return -1;
   }
-		
+	
   if (!container_prog.set_uniform("light.constant", 1.0f)) {
     return -1;
   }
@@ -176,7 +176,15 @@ int main() {
     return -1;
   }
 
-  if (!container_prog.set_uniform("light.position",lightPos)) {
+  if (!container_prog.set_uniform("light.position",cube_camera.get_position())) {
+    return -1;
+  }
+
+  if (!container_prog.set_uniform("light.direction",cube_camera.get_front())) {
+    return -1;
+  }
+
+  if (!container_prog.set_uniform("light.cutOff",glm::cos(glm::radians(12.5f)))) {
     return -1;
   }
 

@@ -100,6 +100,7 @@ public:
 
   const auto &get_position() const { return position; }
 
+  const auto &get_front() const { return front; }
 private:
   void update_coordinate_system() {
     // Calculate the new front vector
