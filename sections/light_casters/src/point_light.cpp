@@ -165,7 +165,7 @@ int main() {
   if (!container_prog.set_uniform("light.specular", 1.0f, 1.0f, 1.0f)) {
     return -1;
   }
-		
+
   if (!container_prog.set_uniform("light.constant", 1.0f)) {
     return -1;
   }
@@ -176,7 +176,7 @@ int main() {
     return -1;
   }
 
-  if (!container_prog.set_uniform("light.position",lightPos)) {
+  if (!container_prog.set_uniform("light.position", lightPos)) {
     return -1;
   }
 

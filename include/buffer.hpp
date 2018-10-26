@@ -31,7 +31,7 @@ public:
 
   ~buffer() noexcept { glDeleteBuffers(1, &buffer_id); }
 
-  template <size_t N> bool write(data_type (&const data)[N]) noexcept {
+  template <size_t N> bool write(const data_type (&data)[N]) noexcept {
     static_assert(N != 0, "can't write empty array");
     if (!bind()) {
       return false;

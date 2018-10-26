@@ -155,17 +155,21 @@ int main() {
     return -1;
   }
 
-  if (!container_prog.set_uniform("light.ambient", 0.5f, 0.5f, 0.5f)) {
+  if (!container_prog.set_uniform("light.ambient", 0.1f, 0.1f, 0.1f)) {
     return -1;
   }
-  if (!container_prog.set_uniform("light.diffuse", 0.2f, 0.2f, 0.2f)) {
+  // we configure the diffuse intensity slightly higher; the right lighting
+  // conditions differ with each lighting method and environment. each
+  // environment and lighting type requires some tweaking to get the best out of
+  // your environment.
+  if (!container_prog.set_uniform("light.diffuse", 0.8f, 0.8f, 0.8f)) {
     return -1;
   }
 
   if (!container_prog.set_uniform("light.specular", 1.0f, 1.0f, 1.0f)) {
     return -1;
   }
-	
+
   if (!container_prog.set_uniform("light.constant", 1.0f)) {
     return -1;
   }
@@ -176,15 +180,8 @@ int main() {
     return -1;
   }
 
-  if (!container_prog.set_uniform("light.position",cube_camera.get_position())) {
-    return -1;
-  }
-
-  if (!container_prog.set_uniform("light.direction",cube_camera.get_front())) {
-    return -1;
-  }
-
-  if (!container_prog.set_uniform("light.cutOff",glm::cos(glm::radians(12.5f)))) {
+  if (!container_prog.set_uniform("light.cutOff",
+                                  glm::cos(glm::radians(12.5f)))) {
     return -1;
   }
 
@@ -264,6 +261,16 @@ int main() {
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (!container_prog.set_uniform("light.position",
+                                    cube_camera.get_position())) {
+      return -1;
+    }
+
+    if (!container_prog.set_uniform("light.direction",
+                                    cube_camera.get_front())) {
+      return -1;
+    }
 
     if (!container_prog.set_uniform("viewPos", cube_camera.get_position())) {
       return -1;
