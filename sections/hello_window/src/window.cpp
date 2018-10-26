@@ -1,5 +1,5 @@
-#include <gsl/gsl>
 #include <GLFW/glfw3.h>
+#include <gsl/gsl>
 #include <iostream>
 
 namespace {
@@ -20,7 +20,7 @@ int main() {
     std::cerr << "glfwInit failed" << std::endl;
   }
 
-  auto cleanup=gsl::finally([]() { glfwTerminate(); });
+  auto cleanup = gsl::finally([]() { glfwTerminate(); });
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

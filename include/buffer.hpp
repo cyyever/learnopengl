@@ -1,13 +1,9 @@
 #pragma once
 
-#include <filesystem>
-#include <fstream>
-#include <glm/glm.hpp>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
-#include <tuple>
+
+#include "error.hpp"
 
 namespace opengl {
 
@@ -20,7 +16,7 @@ public:
   explicit buffer() {
     glGenBuffers(1, &buffer_id);
 
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glGenBuffers failed" << std::endl;
       throw std::runtime_error("glGenBuffers failed");
     }
@@ -45,7 +41,7 @@ public:
     }
 
     glBufferData(target, sizeof(data), data, GL_STATIC_DRAW);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glBufferData failed" << std::endl;
       return false;
     }
@@ -65,13 +61,13 @@ public:
     }
     glVertexAttribIPointer(index, size, type, stride * sizeof(data_type),
                            (void *)offset);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glVertexAttribIPointer failed" << std::endl;
       return false;
     }
 
     glEnableVertexAttribArray(index);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glEnableVertexAttribArray failed" << std::endl;
       return false;
     }
@@ -81,7 +77,7 @@ public:
 private:
   bool bind() noexcept {
     glBindBuffer(target, buffer_id);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glBindBuffer failed" << std::endl;
       return false;
     }
@@ -98,7 +94,7 @@ public:
   explicit vertex_array(bool use_after_create = true) {
     glGenVertexArrays(1, &vertex_array_id);
 
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glGenVertexArrays failed" << std::endl;
       throw std::runtime_error("glGenVertexArrays failed");
     }
@@ -120,7 +116,7 @@ public:
 private:
   bool bind() noexcept {
     glBindVertexArray(vertex_array_id);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glBindVertexArray failed" << std::endl;
       return false;
     }

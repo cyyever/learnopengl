@@ -28,7 +28,8 @@ void framebuffer_size_callback(GLFWwindow * /*window*/, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+void mouse_callback([[maybe_unused]] GLFWwindow *window, double xpos,
+                    double ypos) {
   if (firstMouse) // this bool variable is initially set to true
   {
     lastX = xpos;
@@ -43,7 +44,8 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
   cube_camera.lookat(xoffset, yoffset);
 }
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+void scroll_callback([[maybe_unused]] GLFWwindow *window,
+                     [[maybe_unused]] double xoffset, double yoffset) {
   cube_camera.add_fov(yoffset);
 }
 

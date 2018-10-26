@@ -9,6 +9,8 @@
 #include <stb_image.h>
 #undef STB_IMAGE_IMPLEMENTATION
 
+#include "error.hpp"
+
 namespace opengl {
 
 class texture final {
@@ -21,7 +23,7 @@ public:
   texture(GLenum target_, GLenum unit_, std::filesystem::path image)
       : target(target_), unit(unit_) {
     glGenTextures(1, &texture_id);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glGenTextures failed" << std::endl;
       throw std::runtime_error("glBindTexture failed");
     }
@@ -58,7 +60,7 @@ public:
     }
     glTexImage2D(target, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE,
                  data);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glTexImage2D failed" << std::endl;
       throw std::runtime_error("glTexImage2D failed");
     }
@@ -75,18 +77,18 @@ public:
 
   bool use(const extra_config &config = {}) noexcept {
     glActiveTexture(unit);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glActiveTexture failed" << std::endl;
       return false;
     }
     glBindTexture(target, texture_id);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glBindTexture failed" << std::endl;
       return false;
     }
     if (config.generate_mipmap) {
       glGenerateMipmap(target);
-      if (glGetError() != GL_NO_ERROR) {
+      if (check_error()) {
         std::cerr << "glGenerateMipmap failed" << std::endl;
         return false;
       }
@@ -103,7 +105,7 @@ public:
     } else {
       static_assert("not supported value type");
     }
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glTexParameter failed" << std::endl;
       return false;
     }
