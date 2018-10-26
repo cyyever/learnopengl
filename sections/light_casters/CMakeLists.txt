@@ -4,7 +4,7 @@ PROJECT(Light-casters)
 
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/../../cmake/packages.cmake)
 
-FOREACH(prog directional_light point_light spotlight)
+FOREACH(prog directional_light point_light spotlight spotlight_smooth_edge)
   ADD_EXECUTABLE(${prog} ${CMAKE_CURRENT_LIST_DIR}/src/${prog}.cpp)
 ENDFOREACH()
 
