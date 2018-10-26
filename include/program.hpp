@@ -79,7 +79,7 @@ public:
       return false;
     }
     glUseProgram(program_id);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "glUseProgram failed" << std::endl;
       return false;
     }
@@ -98,7 +98,7 @@ public:
       return false;
     }
     set_function(location);
-    if (glGetError() != GL_NO_ERROR) {
+    if (check_error()) {
       std::cerr << "set_function failed:" << variable_name << std::endl;
       return false;
     }

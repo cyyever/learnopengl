@@ -11,7 +11,7 @@ struct source_location {
 
   // 14.1.2, source_location creation
   static constexpr source_location current(
-#ifdef __GNUG__
+#if defined(__GNUG__) && !defined(__clang__)
       const char *__file = __builtin_FILE(), int __line = __builtin_LINE()
 #else
       const char *__file = "unknown", int __line = 0
