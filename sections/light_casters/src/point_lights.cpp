@@ -147,7 +147,7 @@ int main() {
   }
 
   if (!container_prog.attach_shader_file(GL_FRAGMENT_SHADER,
-                                         "shader/directional_light.fs")) {
+                                         "shader/point_lights.fs")) {
     return -1;
   }
 
@@ -165,8 +165,18 @@ int main() {
   if (!container_prog.set_uniform("light.specular", 1.0f, 1.0f, 1.0f)) {
     return -1;
   }
+		
+  if (!container_prog.set_uniform("light.constant", 1.0f)) {
+    return -1;
+  }
+  if (!container_prog.set_uniform("light.linear", 0.09f)) {
+    return -1;
+  }
+  if (!container_prog.set_uniform("light.quadratic", 0.032f)) {
+    return -1;
+  }
 
-  if (!container_prog.set_uniform("light.direction", -0.2f, -1.0f, -0.3f)) {
+  if (!container_prog.set_uniform("light.position",lightPos)) {
     return -1;
   }
 

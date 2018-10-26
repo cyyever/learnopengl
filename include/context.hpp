@@ -71,6 +71,8 @@ public:
       return {};
     }
 
+    glEnable(GL_DEPTH_TEST);
+
     GLint flags = 0;
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
     if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
