@@ -219,9 +219,7 @@ int main() {
   model = glm::translate(model, lightPos);
   model = glm::scale(model, glm::vec3(0.2f));
 
-  if (!lamp_prog.set_uniform_by_callback("model", [&model](auto location) {
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(model));
-      })) {
+  if (!container_prog.set_uniform("model", model)) {
     return -1;
   }
 

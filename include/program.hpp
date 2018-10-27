@@ -139,6 +139,10 @@ public:
         return set_uniform_by_callback(variable_name, [&value](auto location) {
           glUniform3fv(location, 1, &value[0]);
         });
+      } else if constexpr (std::is_same_v<real_value_type, glm::mat4>) {
+        return set_uniform_by_callback(variable_name, [&value](auto location) {
+	  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+        });
       }
     } else if constexpr (sizeof...(values) == 3) {
       auto &&value1 = std::get<0>(
