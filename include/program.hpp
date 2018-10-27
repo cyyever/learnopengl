@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <tuple>
+#include <set>
 
 #include "texture.hpp"
 
@@ -69,8 +70,13 @@ public:
       std::cerr << "glCompileShader failed" << infoLog << std::endl;
       return false;
     }
-    linked = false;
     glAttachShader(program_id, shader_id);
+    if (check_error()) {
+      std::cerr << "glAttachShader failed" << std::endl;
+      return false;
+    }
+    assigned_uniform_variables.clear();
+    linked = false;
     return true;
   }
 
@@ -97,6 +103,7 @@ public:
       std::cerr << "glGetUniformLocation failed:" << variable_name << std::endl;
       return false;
     }
+    assigned_uniform_variables.insert(variable_name);
     set_function(location);
     if (check_error()) {
       std::cerr << "set_function failed:" << variable_name << std::endl;
@@ -168,6 +175,28 @@ public:
     return false;
   }
 
+  bool check_uniform_assignment() noexcept {
+    GLint count=0;
+    glGetProgramiv(program_id,GL_ACTIVE_UNIFORMS, &count);
+    if (check_error()) {
+      std::cerr << "glGetProgramiv failed" << std::endl;
+      return false;
+    }
+
+    GLchar name[512];
+    for (GLuint i = 0; i < count; i++)
+    {
+      GLint size;
+      GLenum type;
+      glGetActiveUniform(program_id, i,sizeof(name), nullptr, &size, &type, name);
+      if(assigned_uniform_variables.count(name)==0) {
+	std::cerr << "uniform variable \""<<name<<"\" is not assigned"<<std::endl;
+	return false;
+      }
+    }
+    return true;
+  }
+
 private:
   bool link() {
     if (!linked) {
@@ -188,6 +217,7 @@ private:
 
 private:
   GLuint program_id{0};
+  std::set<std::string> assigned_uniform_variables;
   bool linked{false};
 };
 } // namespace opengl
