@@ -4,11 +4,11 @@
 #include <fstream>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
 #include <tuple>
-#include <set>
 
 #include "texture.hpp"
 
@@ -148,7 +148,7 @@ public:
         });
       } else if constexpr (std::is_same_v<real_value_type, glm::mat4>) {
         return set_uniform_by_callback(variable_name, [&value](auto location) {
-	  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+          glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
         });
       }
     } else if constexpr (sizeof...(values) == 3) {
@@ -176,22 +176,23 @@ public:
   }
 
   bool check_uniform_assignment() noexcept {
-    GLint count=0;
-    glGetProgramiv(program_id,GL_ACTIVE_UNIFORMS, &count);
+    GLint count = 0;
+    glGetProgramiv(program_id, GL_ACTIVE_UNIFORMS, &count);
     if (check_error()) {
       std::cerr << "glGetProgramiv failed" << std::endl;
       return false;
     }
 
     GLchar name[512];
-    for (GLuint i = 0; i < count; i++)
-    {
+    for (GLuint i = 0; i < count; i++) {
       GLint size;
       GLenum type;
-      glGetActiveUniform(program_id, i,sizeof(name), nullptr, &size, &type, name);
-      if(assigned_uniform_variables.count(name)==0) {
-	std::cerr << "uniform variable \""<<name<<"\" is not assigned"<<std::endl;
-	return false;
+      glGetActiveUniform(program_id, i, sizeof(name), nullptr, &size, &type,
+                         name);
+      if (assigned_uniform_variables.count(name) == 0) {
+        std::cerr << "uniform variable \"" << name << "\" is not assigned"
+                  << std::endl;
+        return false;
       }
     }
     return true;
