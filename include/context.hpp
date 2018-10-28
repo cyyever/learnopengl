@@ -20,23 +20,21 @@ public:
     window(const window &) = delete;
     window &operator=(const window &) = delete;
 
-    window(window &&rhs) {
-	operator=(std::move(rhs));
-    }
+    window(window &&rhs) { operator=(std::move(rhs)); }
     window &operator=(window &&rhs) {
-      if(this !=&rhs) {
-	if(handler) {
-	   glfwDestroyWindow(handler);
-	   handler=nullptr;
-	}
-	std::swap(handler,rhs.handler);
+      if (this != &rhs) {
+        if (handler) {
+          glfwDestroyWindow(handler);
+          handler = nullptr;
+        }
+        std::swap(handler, rhs.handler);
       }
       return *this;
     }
 
     ~window() {
-      if(handler) {
-	glfwDestroyWindow(handler);
+      if (handler) {
+        glfwDestroyWindow(handler);
       }
     }
 
@@ -63,7 +61,7 @@ public:
     });
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_minor_version);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
@@ -181,11 +179,12 @@ private:
     std::cout << std::endl;
   }
 
+public:
+  static constexpr GLint gl_minor_version = 5;
+
 private:
   inline static gsl::final_action cleanup{
-      gsl::finally([]() {
-	  glfwTerminate();
-	  })};
+      gsl::finally([]() { glfwTerminate(); })};
 };
 
 } // namespace opengl

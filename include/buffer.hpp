@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "context.hpp"
 #include "error.hpp"
 
 namespace opengl {
@@ -16,7 +17,6 @@ template <GLenum target, typename data_type> class buffer final {
 public:
   explicit buffer() {
     glGenBuffers(1, &buffer_id);
-
     if (check_error()) {
       std::cerr << "glGenBuffers failed" << std::endl;
       throw std::runtime_error("glGenBuffers failed");
@@ -33,11 +33,14 @@ public:
 
   template <size_t N> bool write(const data_type (&data)[N]) noexcept {
     static_assert(N != 0, "can't write empty array");
-    if (!bind()) {
-      return false;
+    if constexpr (opengl::context::gl_minor_version < 5) {
+      if (!bind()) {
+        return false;
+      }
+      glBufferData(target, sizeof(data), data, GL_STATIC_DRAW);
+    } else {
+      glNamedBufferData(buffer_id, sizeof(data), data, GL_STATIC_DRAW);
     }
-
-    glBufferData(target, sizeof(data), data, GL_STATIC_DRAW);
     if (check_error()) {
       std::cerr << "glBufferData failed" << std::endl;
       return false;
