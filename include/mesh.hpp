@@ -28,6 +28,11 @@ public:
       : vertices(std::move(vertices_)), indices(std::move(indices_)),
         textures(std::move(textures_)) {
 
+    if (!VEO.write(indices_)) {
+      std::cerr << "VEO write failed" << std::endl;
+      throw std::runtime_error("VEO write failed");
+    }
+
     if (!VBO.write(
             gsl::span(reinterpret_cast<const std::byte *>(vertices.data()),
                       vertices.size() * sizeof(vertex)))) {
@@ -68,6 +73,7 @@ private:
   std::vector<opengl::texture> textures;
   opengl::vertex_array VAO{true};
   opengl::buffer<GL_ARRAY_BUFFER, float> VBO;
+  opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, size_t> VEO;
 };
 
 } // namespace opengl

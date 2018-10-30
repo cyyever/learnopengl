@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cstddef>
 #include <glad/glad.h>
 #include <gsl/gsl>
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
+#include <vector>
 
 #include "context.hpp"
 #include "error.hpp"
@@ -11,9 +14,10 @@
 namespace opengl {
 
 template <GLenum target, typename data_type> class buffer final {
-  static_assert(std::is_same_v<GLfloat, data_type> ||
-                    std::is_same_v<GLint, data_type>,
-                "unsupported data type");
+  static_assert(
+      (GL_ARRAY_BUFFER == target && std::is_same_v<GLfloat, data_type>) ||
+          (GL_ELEMENT_ARRAY_BUFFER == target && std::is_integral_v<data_type>),
+      "unsupported target/data type");
 
 public:
   explicit buffer() {
@@ -43,6 +47,11 @@ public:
   template <size_t N> bool write(const data_type (&data)[N]) noexcept {
     static_assert(N != 0, "can't write empty array");
     return write(gsl::span<const data_type>(data));
+  }
+
+  template <typename T> bool write(const std::vector<T> &data) noexcept {
+    return write(gsl::span(reinterpret_cast<const std::byte *>(data.data()),
+                           data.size() * sizeof(T)));
   }
 
   template <typename T> bool write(gsl::span<const T> data_view) noexcept {
