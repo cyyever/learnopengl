@@ -122,13 +122,13 @@ int main() {
     return -1;
   }
 
-  if (!VBO.vertex_attribute_pointer(0, 3, 8, 0)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(0, 3, 8, 0)) {
     return -1;
   }
-  if (!VBO.vertex_attribute_pointer(1, 3, 8, 3)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(1, 3, 8, 3)) {
     return -1;
   }
-  if (!VBO.vertex_attribute_pointer(2, 3, 8, 6)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(2, 3, 8, 6)) {
     return -1;
   }
 
@@ -136,7 +136,7 @@ int main() {
   // same for the light object which is also a 3D cube)
   opengl::vertex_array lightVAO;
 
-  if (!VBO.vertex_attribute_pointer(0, 3, 8, 0)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(0, 3, 8, 0)) {
     return -1;
   }
 

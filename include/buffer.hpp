@@ -45,7 +45,7 @@ public:
     return write(gsl::span<const data_type>(data));
   }
 
-  bool write(gsl::span<const data_type> data_view) noexcept {
+  template <typename T> bool write(gsl::span<const T> data_view) noexcept {
     if (data_view.empty()) {
       std::cerr << "can't write empty data" << std::endl;
       return false;
@@ -69,6 +69,14 @@ public:
   }
 
   template <typename = std::enable_if_t<target == GL_ARRAY_BUFFER>>
+  bool vertex_attribute_pointer_simple_offset(GLuint index, GLint size,
+                                              GLsizei stride,
+                                              size_t offset) noexcept {
+    return vertex_attribute_pointer(index, size, stride * sizeof(data_type),
+                                    offset * sizeof(data_type));
+  }
+
+  template <typename = std::enable_if_t<target == GL_ARRAY_BUFFER>>
   bool vertex_attribute_pointer(GLuint index, GLint size, GLsizei stride,
                                 size_t offset) noexcept {
     if (!bind()) {
@@ -79,9 +87,8 @@ public:
     if constexpr (std::is_same_v<GLint, data_type>) {
       type = GL_INT;
     }
-    glVertexAttribPointer(index, size, type, GL_FALSE,
-                          stride * sizeof(data_type),
-                          reinterpret_cast<void *>(offset * sizeof(data_type)));
+    glVertexAttribPointer(index, size, type, GL_FALSE, stride,
+                          reinterpret_cast<void *>(offset));
     if (check_error()) {
       std::cerr << "glVertexAttribPointer failed" << std::endl;
       return false;

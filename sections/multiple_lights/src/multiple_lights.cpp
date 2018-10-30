@@ -120,13 +120,13 @@ int main() {
     return -1;
   }
 
-  if (!VBO.vertex_attribute_pointer(0, 3, 8, 0)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(0, 3, 8, 0)) {
     return -1;
   }
-  if (!VBO.vertex_attribute_pointer(1, 3, 8, 3)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(1, 3, 8, 3)) {
     return -1;
   }
-  if (!VBO.vertex_attribute_pointer(2, 3, 8, 6)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(2, 3, 8, 6)) {
     return -1;
   }
 
@@ -134,7 +134,7 @@ int main() {
   // same for the light object which is also a 3D cube)
   opengl::vertex_array lightVAO;
 
-  if (!VBO.vertex_attribute_pointer(0, 3, 8, 0)) {
+  if (!VBO.vertex_attribute_pointer_simple_offset(0, 3, 8, 0)) {
     return -1;
   }
 
@@ -248,7 +248,6 @@ int main() {
     return -1;
   }
 
-
   // positions all containers
   glm::vec3 cubePositions[] = {
       glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
@@ -258,11 +257,8 @@ int main() {
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
   glm::vec3 pointLightPositions[] = {
-        glm::vec3( 0.7f,  0.2f,  2.0f),
-	    glm::vec3( 2.3f, -3.3f, -4.0f),
-	        glm::vec3(-4.0f,  2.0f, -12.0f),
-		    glm::vec3( 0.0f,  0.0f, -3.0f)
-  };
+      glm::vec3(0.7f, 0.2f, 2.0f), glm::vec3(2.3f, -3.3f, -4.0f),
+      glm::vec3(-4.0f, 2.0f, -12.0f), glm::vec3(0.0f, 0.0f, -3.0f)};
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -292,45 +288,59 @@ int main() {
       return -1;
     }
 
-    if (!container_prog.set_uniform("view",view)) {
+    if (!container_prog.set_uniform("view", view)) {
       return -1;
     }
 
-    if (!container_prog.set_uniform("projection",projection)) {
+    if (!container_prog.set_uniform("projection", projection)) {
       return -1;
     }
 
-    for(size_t i=0;i<sizeof(pointLightPositions)/sizeof(glm::vec3);i++) {
-      if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].position",pointLightPositions[i])) {
-	return -1;
+    for (size_t i = 0; i < sizeof(pointLightPositions) / sizeof(glm::vec3);
+         i++) {
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].position",
+                                      pointLightPositions[i])) {
+        return -1;
       }
 
-  if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].constant", 1.0f)) {
-    return -1;
-  }
-  if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].linear", 0.09f)) {
-    return -1;
-  }
-  if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].quadratic", 0.032f)) {
-    return -1;
-  }
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].constant",
+                                      1.0f)) {
+        return -1;
+      }
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].linear",
+                                      0.09f)) {
+        return -1;
+      }
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].quadratic",
+                                      0.032f)) {
+        return -1;
+      }
 
-  if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].ambient", 0.05f, 0.05f, 0.05f)) {
-    return -1;
-  }
-  // we configure the diffuse intensity slightly higher; the right lighting
-  // conditions differ with each lighting method and environment. each
-  // environment and lighting type requires some tweaking to get the best out of
-  // your environment.
-  if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].diffuse", 0.8f, 0.8f, 0.8f)) {
-    return -1;
-  }
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].ambient",
+                                      0.05f, 0.05f, 0.05f)) {
+        return -1;
+      }
+      // we configure the diffuse intensity slightly higher; the right lighting
+      // conditions differ with each lighting method and environment. each
+      // environment and lighting type requires some tweaking to get the best
+      // out of your environment.
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].diffuse",
+                                      0.8f, 0.8f, 0.8f)) {
+        return -1;
+      }
 
-  if (!container_prog.set_uniform(std::string("pointLights[")+std::to_string(i)+"].specular", 1.0f, 1.0f, 1.0f)) {
-    return -1;
-  }
+      if (!container_prog.set_uniform(std::string("pointLights[") +
+                                          std::to_string(i) + "].specular",
+                                      1.0f, 1.0f, 1.0f)) {
+        return -1;
+      }
     }
-
 
     for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
       if (!cubeVAO.use()) {
@@ -352,8 +362,8 @@ int main() {
           })) {
         return -1;
       }
-      if(!container_prog.check_uniform_assignment()) {
-	return -1;
+      if (!container_prog.check_uniform_assignment()) {
+        return -1;
       }
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -380,21 +390,21 @@ int main() {
       return -1;
     }
 
-    for(size_t i=0;i<sizeof(pointLightPositions)/sizeof(glm::vec3);i++) {
+    for (size_t i = 0; i < sizeof(pointLightPositions) / sizeof(glm::vec3);
+         i++) {
       glm::mat4 model = glm::mat4(1.0f);
       model = glm::translate(model, pointLightPositions[i]);
       model = glm::scale(model, glm::vec3(0.2f));
 
-      if (!lamp_prog.set_uniform("model",model) ) {
-	return -1;
+      if (!lamp_prog.set_uniform("model", model)) {
+        return -1;
       }
 
-      if(!lamp_prog.check_uniform_assignment()) {
-	return -1;
+      if (!lamp_prog.check_uniform_assignment()) {
+        return -1;
       }
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-
 
     glfwSwapBuffers(window);
     glfwPollEvents();
