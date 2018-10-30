@@ -58,8 +58,8 @@ public:
   mesh(const mesh &) = delete;
   mesh &operator=(const mesh &) = delete;
 
-  mesh(mesh &&) noexcept = delete;
-  mesh &operator=(mesh &&) noexcept = delete;
+  mesh(mesh &&) noexcept = default;
+  mesh &operator=(mesh &&) noexcept = default;
 
   ~mesh() noexcept = default;
 

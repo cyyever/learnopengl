@@ -42,8 +42,8 @@ public:
   buffer(const buffer &) = delete;
   buffer &operator=(const buffer &) = delete;
 
-  buffer(buffer &&) noexcept = delete;
-  buffer &operator=(buffer &&) noexcept = delete;
+  buffer(buffer &&) noexcept = default;
+  buffer &operator=(buffer &&) noexcept = default;
 
   ~buffer() noexcept { glDeleteBuffers(1, &buffer_id); }
 
@@ -149,8 +149,8 @@ public:
   vertex_array(const vertex_array &) = delete;
   vertex_array &operator=(const vertex_array &) = delete;
 
-  vertex_array(vertex_array &&) noexcept = delete;
-  vertex_array &operator=(vertex_array &&) noexcept = delete;
+  vertex_array(vertex_array &&) noexcept = default;
+  vertex_array &operator=(vertex_array &&) noexcept = default;
 
   ~vertex_array() noexcept { glDeleteVertexArrays(1, &vertex_array_id); }
 

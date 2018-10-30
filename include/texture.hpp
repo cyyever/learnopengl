@@ -67,11 +67,11 @@ public:
     clean_texture.release();
   }
 
-  texture(const texture &) = delete;
-  texture &operator=(const texture &) = delete;
+  texture(const texture &) = default;
+  texture &operator=(const texture &) = default;
 
-  texture(texture &&) noexcept = delete;
-  texture &operator=(texture &&) noexcept = delete;
+  texture(texture &&) noexcept = default;
+  texture &operator=(texture &&) noexcept = default;
 
   ~texture() noexcept { glDeleteTextures(1, &texture_id); }
 

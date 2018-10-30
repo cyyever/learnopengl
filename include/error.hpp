@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
 #include <string>
 
 namespace opengl {
@@ -71,6 +72,11 @@ check_error(source_location error_location = source_location::current()) {
   std::cerr << error_location.file_name() << '(' << error_location.line() << ')'
             << ' ' << error_msg << std::endl;
   return {error_code};
+}
+
+inline void throw_exception(const std::string &what_arg) {
+  std::cerr << what_arg << std::endl;
+  throw std::runtime_error(what_arg);
 }
 
 } // namespace opengl
