@@ -14,10 +14,13 @@
 namespace opengl {
 
 template <GLenum target, typename data_type> class buffer final {
-  static_assert(
-      (GL_ARRAY_BUFFER == target && std::is_same_v<GLfloat, data_type>) ||
-          (GL_ELEMENT_ARRAY_BUFFER == target && std::is_integral_v<data_type>),
-      "unsupported target/data type");
+  static_assert((GL_ARRAY_BUFFER == target &&
+                 std::is_same_v<GLfloat, data_type>) ||
+                    (GL_ELEMENT_ARRAY_BUFFER == target &&
+                     (std::is_same_v<GLubyte, data_type> ||
+                      std::is_same_v<GLushort, data_type> ||
+                      std::is_same_v<GLuint, data_type>)),
+                "unsupported target/data type");
 
 public:
   explicit buffer() {
@@ -50,11 +53,14 @@ public:
   }
 
   template <typename T> bool write(const std::vector<T> &data) noexcept {
-    return write(gsl::span(reinterpret_cast<const std::byte *>(data.data()),
-                           data.size() * sizeof(T)));
+    return write(gsl::span<const T>(data.data(), data.size()));
   }
 
   template <typename T> bool write(gsl::span<const T> data_view) noexcept {
+    static_assert(
+        target == GL_ARRAY_BUFFER ||
+            (target == GL_ELEMENT_ARRAY_BUFFER && std::is_same_v<T, data_type>),
+        "unsupported method");
     if (data_view.empty()) {
       std::cerr << "can't write empty data" << std::endl;
       return false;
@@ -123,7 +129,7 @@ private:
 
 private:
   GLuint buffer_id{0};
-};
+}; // namespace opengl
 
 class vertex_array final {
 

@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "buffer.hpp"
-#include "context.hpp"
 #include "error.hpp"
+#include "program.hpp"
 #include "texture.hpp"
 
 namespace opengl {
@@ -23,19 +23,17 @@ public:
   };
 
 public:
-  mesh(std::vector<vertex> vertices_, std::vector<size_t> indices_,
-       std::vector<opengl::texture> textures_)
+  mesh(std::vector<vertex> vertices_, std::vector<GLuint> indices_,
+       std::vector<std::pair<opengl::texture, std::string>> textures_)
       : vertices(std::move(vertices_)), indices(std::move(indices_)),
         textures(std::move(textures_)) {
 
-    if (!VEO.write(indices_)) {
+    if (!VEO.write(indices)) {
       std::cerr << "VEO write failed" << std::endl;
       throw std::runtime_error("VEO write failed");
     }
 
-    if (!VBO.write(
-            gsl::span(reinterpret_cast<const std::byte *>(vertices.data()),
-                      vertices.size() * sizeof(vertex)))) {
+    if (!VBO.write(vertices)) {
       std::cerr << "VBO write failed" << std::endl;
       throw std::runtime_error("VBO write failed");
     }
@@ -65,15 +63,36 @@ public:
 
   ~mesh() noexcept = default;
 
-  bool draw() { return true; }
+  bool draw(opengl::program &prog) {
+    if (!prog.use()) {
+      return false;
+    }
+    if (!VAO.use()) {
+      return false;
+    }
+
+    for (auto &[texture, variable_name] : textures) {
+      if (!prog.set_uniform(variable_name, texture)) {
+        return -1;
+      }
+    }
+
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    if (check_error()) {
+      std::cerr << "glDrawElements failed" << std::endl;
+      return false;
+    }
+
+    return true;
+  }
 
 private:
   std::vector<vertex> vertices;
-  std::vector<size_t> indices;
-  std::vector<opengl::texture> textures;
+  std::vector<GLuint> indices;
+  std::vector<std::pair<opengl::texture, std::string>> textures;
   opengl::vertex_array VAO{true};
   opengl::buffer<GL_ARRAY_BUFFER, float> VBO;
-  opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, size_t> VEO;
+  opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, GLuint> VEO;
 };
 
 } // namespace opengl
