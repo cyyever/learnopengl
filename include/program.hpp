@@ -184,7 +184,7 @@ public:
     }
 
     GLchar name[512];
-    for (GLuint i = 0; i < count; i++) {
+    for (GLint i = 0; i < count; i++) {
       GLint size;
       GLenum type;
       glGetActiveUniform(program_id, i, sizeof(name), nullptr, &size, &type,

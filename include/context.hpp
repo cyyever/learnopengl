@@ -100,9 +100,10 @@ public:
 
 private:
   static void APIENTRY debug_callback(GLenum source, GLenum type, GLuint id,
-                                      GLenum severity, GLsizei length,
+                                      GLenum severity,
+                                      [[maybe_unused]] GLsizei length,
                                       const GLchar *message,
-                                      const void *userParam) {
+                                      [[maybe_unused]] const void *userParam) {
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
       return;

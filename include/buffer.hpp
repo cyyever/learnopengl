@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <gsl/gsl>
 #include <iostream>
 #include <stdexcept>
 
@@ -16,10 +17,18 @@ template <GLenum target, typename data_type> class buffer final {
 
 public:
   explicit buffer() {
-    glGenBuffers(1, &buffer_id);
-    if (check_error()) {
-      std::cerr << "glGenBuffers failed" << std::endl;
-      throw std::runtime_error("glGenBuffers failed");
+    if constexpr (opengl::context::gl_minor_version < 5) {
+      glGenBuffers(1, &buffer_id);
+      if (check_error()) {
+        std::cerr << "glGenBuffers failed" << std::endl;
+        throw std::runtime_error("glGenBuffers failed");
+      }
+    } else {
+      glCreateBuffers(1, &buffer_id);
+      if (check_error()) {
+        std::cerr << "glCreateBuffers failed" << std::endl;
+        throw std::runtime_error("glCreateBuffers failed");
+      }
     }
   }
 
@@ -33,13 +42,24 @@ public:
 
   template <size_t N> bool write(const data_type (&data)[N]) noexcept {
     static_assert(N != 0, "can't write empty array");
+    return write(gsl::span<const data_type>(data));
+  }
+
+  bool write(gsl::span<const data_type> data_view) noexcept {
+    if (data_view.empty()) {
+      std::cerr << "can't write empty data" << std::endl;
+      return false;
+    }
+
     if constexpr (opengl::context::gl_minor_version < 5) {
       if (!bind()) {
         return false;
       }
-      glBufferData(target, sizeof(data), data, GL_STATIC_DRAW);
+      glBufferData(target, data_view.size_bytes(), data_view.data(),
+                   GL_STATIC_DRAW);
     } else {
-      glNamedBufferData(buffer_id, sizeof(data), data, GL_STATIC_DRAW);
+      glNamedBufferData(buffer_id, data_view.size_bytes(), data_view.data(),
+                        GL_STATIC_DRAW);
     }
     if (check_error()) {
       std::cerr << "glBufferData failed" << std::endl;
