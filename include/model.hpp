@@ -144,6 +144,14 @@ private:
       auto [it, has_emplaced] = loaded_textures.try_emplace(
           abs_path, GL_TEXTURE_2D, next_texture_unit, abs_path);
       if (has_emplaced) {
+        if (!it->second.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR)) {
+          throw_exception("set GL_TEXTURE_MIN_FILTER failed");
+        }
+
+        if (!it->second.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)) {
+          throw_exception("set GL_TEXTURE_MAG_FILTER failed");
+        }
+
         next_texture_unit++;
       }
       textures.push_back(it->second);
