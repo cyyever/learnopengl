@@ -219,7 +219,7 @@ private:
 
 private:
   std::unique_ptr<GLuint, std::function<void(GLuint *)>> program_id{
-      new GLuint(0), [](auto ptr) { glDeleteProgram(*ptr); }};
+      new GLuint(0), [](auto ptr) { glDeleteProgram(*ptr);delete ptr; }};
   std::set<std::string> assigned_uniform_variables;
   bool linked{false};
 };
