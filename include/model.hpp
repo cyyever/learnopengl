@@ -18,7 +18,7 @@ class model final {
 
 public:
   explicit model(std::filesystem::path model_file_) : model_file(model_file_) {
-    if (!load(model_file)) {
+    if (!load()) {
       throw_exception(std::string("load model failed:") + model_file.string());
     }
   }
@@ -38,16 +38,16 @@ public:
         [this, &prog, &texture_variable_names](
             auto &&self,
             const std::unique_ptr<tree_node<opengl::mesh>> &node) -> bool {
-      if (!node->value.draw(prog, texture_variable_names)) {
-        return false;
+      for (auto &value : node->values) {
+        if (!value.draw(prog, texture_variable_names)) {
+          return false;
+        }
       }
-      /*
-  for (const auto &child : node->children) {
-    if (!self(self, child)) {
-      return false;
-    }
-  }
-      */
+      for (const auto &child : node->children) {
+        if (!self(self, child)) {
+          return false;
+        }
+      }
       return true;
     };
 
@@ -55,7 +55,7 @@ public:
   }
 
 private:
-  bool load(std::filesystem::path model_file) {
+  bool load() {
 
     if (!std::filesystem::exists(model_file)) {
       throw_exception(std::string("no model file:") + model_file.string());
@@ -75,16 +75,16 @@ private:
         [&scene,
          this](auto &&self, auto assimp_node,
                std::unique_ptr<tree_node<opengl::mesh>> &new_node) -> void {
+      new_node = std::make_unique<tree_node<opengl::mesh>>();
       for (size_t i = 0; i < assimp_node->mNumMeshes; i++) {
         auto mesh = scene->mMeshes[assimp_node->mMeshes[i]];
-        new_node = std::make_unique<tree_node<opengl::mesh>>(
-            convert_assimp_mesh(*mesh, *scene));
+        new_node->values.emplace_back(convert_assimp_mesh(*mesh, *scene));
       }
       // then do the same for each of its children
       for (size_t i = 0; i < assimp_node->mNumChildren; i++) {
-        // std::unique_ptr<tree_node<opengl::mesh>> child;
-        // self(self, assimp_node->mChildren[i], child);
-        //  new_node->children.emplace_back(std::move(child));
+        std::unique_ptr<tree_node<opengl::mesh>> child;
+        self(self, assimp_node->mChildren[i], child);
+        new_node->children.emplace_back(std::move(child));
       }
     };
 
@@ -125,13 +125,11 @@ private:
     }
 
     std::map<opengl::texture::type, std::vector<opengl::texture>> textures;
-    if (assimp_mesh.mMaterialIndex >= 0) {
-      auto const material = assimp_scene.mMaterials[assimp_mesh.mMaterialIndex];
-      textures[opengl::texture::type::diffuse] =
-          load_assimp_texture(*material, aiTextureType_DIFFUSE);
-      textures[opengl::texture::type::specular] =
-          load_assimp_texture(*material, aiTextureType_SPECULAR);
-    }
+    auto const material = assimp_scene.mMaterials[assimp_mesh.mMaterialIndex];
+    textures[opengl::texture::type::diffuse] =
+        load_assimp_texture(*material, aiTextureType_DIFFUSE);
+    textures[opengl::texture::type::specular] =
+        load_assimp_texture(*material, aiTextureType_SPECULAR);
     return ::opengl::mesh(vertices, indices, textures);
   }
 
@@ -156,9 +154,8 @@ private:
 private:
   std::filesystem::path model_file;
   template <typename T> struct tree_node {
-    tree_node(T &&value_) : value(std::move(std::forward<T>(value_))) {}
-    T value;
-    // std::vector<std::unique_ptr<tree_node>> children;
+    std::vector<T> values;
+    std::vector<std::unique_ptr<tree_node>> children;
   };
   std::unique_ptr<tree_node<opengl::mesh>> meshes;
 

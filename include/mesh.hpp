@@ -29,30 +29,32 @@ public:
       : vertices(std::move(vertices_)), indices(std::move(indices_)),
         textures(std::move(textures_)) {
 
+    if (!VAO.use()) {
+      throw_exception("use VAO failed");
+    }
     if (!VEO.write(indices)) {
-      std::cerr << "VEO write failed" << std::endl;
-      throw std::runtime_error("VEO write failed");
+      throw_exception("VEO write failed");
     }
 
     if (!VBO.write(vertices)) {
-      std::cerr << "VBO write failed" << std::endl;
-      throw std::runtime_error("VBO write failed");
+      throw_exception("VBO write failed");
     }
 
     if (!VBO.vertex_attribute_pointer(0, 3, sizeof(vertex),
                                       offsetof(vertex, position))) {
-      std::cerr << "VBO vertex_attribute_pointer failed" << std::endl;
-      throw std::runtime_error("VBO vertex_attribute_pointer failed");
+      throw_exception("VBO vertex_attribute_pointer failed");
     }
     if (!VBO.vertex_attribute_pointer(1, 3, sizeof(vertex),
                                       offsetof(vertex, normal))) {
-      std::cerr << "VBO vertex_attribute_pointer failed" << std::endl;
-      throw std::runtime_error("VBO vertex_attribute_pointer failed");
+      throw_exception("VBO vertex_attribute_pointer failed");
     }
     if (!VBO.vertex_attribute_pointer(2, 3, sizeof(vertex),
                                       offsetof(vertex, texture_coord))) {
-      std::cerr << "VBO vertex_attribute_pointer failed" << std::endl;
-      throw std::runtime_error("VBO vertex_attribute_pointer failed");
+      throw_exception("VBO vertex_attribute_pointer failed");
+    }
+
+    if (!VAO.unuse()) {
+      throw_exception("unuse VAO failed");
     }
   }
 
@@ -74,6 +76,7 @@ public:
       return false;
     }
 
+    /*
     for (auto const &[type, variable_names] : texture_variable_names) {
       auto it = textures.find(type);
       if (it == textures.end()) {
@@ -97,6 +100,7 @@ public:
     if (!prog.check_uniform_assignment()) {
       return false;
     }
+    */
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     if (check_error()) {

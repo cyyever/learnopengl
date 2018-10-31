@@ -76,7 +76,7 @@ int main() {
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
-  opengl::model nanosuit_model("Debug/resource/nanosuit/nanosuit.obj");
+  opengl::model nanosuit_model("resource/nanosuit/nanosuit.obj");
 
   opengl::program model_prog;
   if (!model_prog.attach_shader_file(GL_VERTEX_SHADER, "shader/model.vs")) {
@@ -88,6 +88,14 @@ int main() {
   }
 
   glm::mat4 model(1.0f);
+  model = glm::translate(
+      model,
+      glm::vec3(0.0f, -1.75f,
+                0.0f)); // translate it down so it's at the center of the scene
+  model = glm::scale(
+      model,
+      glm::vec3(0.2f, 0.2f,
+                0.2f)); // it's a bit too big for our scene, so scale it down
   if (!model_prog.set_uniform("model", model)) {
     return -1;
   }
@@ -99,7 +107,7 @@ int main() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto view = model_camera.get_view_matrix();

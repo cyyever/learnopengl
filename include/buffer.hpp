@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <glad/glad.h>
 #include <gsl/gsl>
 #include <iostream>
@@ -25,16 +26,14 @@ template <GLenum target, typename data_type> class buffer final {
 public:
   explicit buffer() {
     if constexpr (opengl::context::gl_minor_version < 5) {
-      glGenBuffers(1, &buffer_id);
+      glGenBuffers(1, buffer_id.get());
       if (check_error()) {
-        std::cerr << "glGenBuffers failed" << std::endl;
-        throw std::runtime_error("glGenBuffers failed");
+        throw_exception("glGenBuffers failed");
       }
     } else {
-      glCreateBuffers(1, &buffer_id);
+      glCreateBuffers(1, buffer_id.get());
       if (check_error()) {
-        std::cerr << "glCreateBuffers failed" << std::endl;
-        throw std::runtime_error("glCreateBuffers failed");
+        throw_exception("glCreateBuffers failed");
       }
     }
   }
@@ -45,7 +44,7 @@ public:
   buffer(buffer &&) noexcept = default;
   buffer &operator=(buffer &&) noexcept = default;
 
-  ~buffer() noexcept { glDeleteBuffers(1, &buffer_id); }
+  ~buffer() noexcept = default;
 
   template <size_t N> bool write(const data_type (&data)[N]) noexcept {
     static_assert(N != 0, "can't write empty array");
@@ -73,7 +72,7 @@ public:
       glBufferData(target, data_view.size_bytes(), data_view.data(),
                    GL_STATIC_DRAW);
     } else {
-      glNamedBufferData(buffer_id, data_view.size_bytes(), data_view.data(),
+      glNamedBufferData(*buffer_id, data_view.size_bytes(), data_view.data(),
                         GL_STATIC_DRAW);
     }
     if (check_error()) {
@@ -119,7 +118,7 @@ public:
 
 private:
   bool bind() noexcept {
-    glBindBuffer(target, buffer_id);
+    glBindBuffer(target, *buffer_id);
     if (check_error()) {
       std::cerr << "glBindBuffer failed" << std::endl;
       return false;
@@ -128,18 +127,18 @@ private:
   }
 
 private:
-  GLuint buffer_id{0};
+  std::unique_ptr<GLuint, std::function<void(GLuint *)>> buffer_id{
+      new GLuint(0), [](auto ptr) { glDeleteBuffers(1, ptr); }};
 }; // namespace opengl
 
 class vertex_array final {
 
 public:
   explicit vertex_array(bool use_after_create = true) {
-    glGenVertexArrays(1, &vertex_array_id);
+    glGenVertexArrays(1, vertex_array_id.get());
 
     if (check_error()) {
-      std::cerr << "glGenVertexArrays failed" << std::endl;
-      throw std::runtime_error("glGenVertexArrays failed");
+      throw_exception("glGenVertexArrays failed");
     }
     if (use_after_create && !use()) {
       throw std::runtime_error("can't use vertex_array");
@@ -152,13 +151,14 @@ public:
   vertex_array(vertex_array &&) noexcept = default;
   vertex_array &operator=(vertex_array &&) noexcept = default;
 
-  ~vertex_array() noexcept { glDeleteVertexArrays(1, &vertex_array_id); }
+  ~vertex_array() noexcept = default;
 
-  bool use() noexcept { return bind(); }
+  bool use() noexcept { return bind(*vertex_array_id); }
+  bool unuse() noexcept { return bind(0); }
 
 private:
-  bool bind() noexcept {
-    glBindVertexArray(vertex_array_id);
+  bool bind(GLuint id) noexcept {
+    glBindVertexArray(id);
     if (check_error()) {
       std::cerr << "glBindVertexArray failed" << std::endl;
       return false;
@@ -167,6 +167,7 @@ private:
   }
 
 private:
-  GLuint vertex_array_id{0};
+  std::unique_ptr<GLuint, std::function<void(GLuint *)>> vertex_array_id{
+      new GLuint(0), [](auto ptr) { glDeleteVertexArrays(1, ptr); }};
 };
 } // namespace opengl
