@@ -32,8 +32,8 @@ public:
     if (!VAO.use()) {
       throw_exception("use VAO failed");
     }
-    if (!VEO.write(indices)) {
-      throw_exception("VEO write failed");
+    if (!EBO.write(indices)) {
+      throw_exception("EBO write failed");
     }
 
     if (!VBO.write(vertices)) {
@@ -61,8 +61,8 @@ public:
   mesh(const mesh &) = delete;
   mesh &operator=(const mesh &) = delete;
 
-  mesh(mesh &&) noexcept = default;
-  mesh &operator=(mesh &&) noexcept = default;
+  mesh(mesh &&) = default;
+  mesh &operator=(mesh &&) = default;
 
   ~mesh() noexcept = default;
 
@@ -76,7 +76,6 @@ public:
       return false;
     }
 
-    /*
     for (auto const &[type, variable_names] : texture_variable_names) {
       auto it = textures.find(type);
       if (it == textures.end()) {
@@ -90,7 +89,6 @@ public:
         return false;
       }
       for (size_t i = 0; i < variable_names.size(); i++) {
-
         if (!prog.set_uniform(variable_names[i], it->second[i])) {
           return false;
         }
@@ -100,7 +98,6 @@ public:
     if (!prog.check_uniform_assignment()) {
       return false;
     }
-    */
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     if (check_error()) {
@@ -117,7 +114,7 @@ private:
   std::map<texture::type, std::vector<opengl::texture>> textures;
   opengl::vertex_array VAO{true};
   opengl::buffer<GL_ARRAY_BUFFER, float> VBO;
-  opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, GLuint> VEO;
+  opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, GLuint> EBO;
 };
 
 } // namespace opengl

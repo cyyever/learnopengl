@@ -26,13 +26,11 @@ public:
 
   texture(GLenum target_, GLenum unit_, std::filesystem::path image)
       : target(target_), unit(unit_) {
-    glGenTextures(1, &texture_id);
+    glGenTextures(1, texture_id.get());
     if (check_error()) {
       std::cerr << "glGenTextures failed" << std::endl;
       throw std::runtime_error("glBindTexture failed");
     }
-    std::unique_ptr<GLuint, std::function<void(GLuint *)>> clean_texture(
-        &texture_id, [](auto p) { glDeleteTextures(1, p); });
 
     extra_config config;
     config.generate_mipmap = false;
@@ -68,7 +66,6 @@ public:
       std::cerr << "glTexImage2D failed" << std::endl;
       throw std::runtime_error("glTexImage2D failed");
     }
-    clean_texture.release();
   }
 
   texture(const texture &) = default;
@@ -77,7 +74,7 @@ public:
   texture(texture &&) noexcept = default;
   texture &operator=(texture &&) noexcept = default;
 
-  ~texture() noexcept { glDeleteTextures(1, &texture_id); }
+  ~texture() noexcept = default;
 
   bool use(const extra_config &config = {}) noexcept {
     glActiveTexture(unit);
@@ -85,7 +82,7 @@ public:
       std::cerr << "glActiveTexture failed" << std::endl;
       return false;
     }
-    glBindTexture(target, texture_id);
+    glBindTexture(target, *texture_id);
     if (check_error()) {
       std::cerr << "glBindTexture failed" << std::endl;
       return false;
@@ -119,7 +116,8 @@ public:
   GLenum get_unit() const { return unit; }
 
 private:
-  GLuint texture_id{0};
+  std::shared_ptr<GLuint> texture_id{
+      new GLuint(0), [](auto ptr) { glDeleteTextures(1, ptr); }};
   GLenum target{};
   GLenum unit{};
 };

@@ -17,8 +17,8 @@ namespace opengl {
 class program final {
 public:
   program() {
-    program_id = glCreateProgram();
-    if (program_id == 0) {
+    *program_id = glCreateProgram();
+    if (*program_id == 0) {
       std::cerr << "glCreateProgram failed" << std::endl;
       throw std::runtime_error("glCreateProgram failed");
     }
@@ -27,10 +27,10 @@ public:
   program(const program &) = delete;
   program &operator=(const program &) = delete;
 
-  program(program &&) noexcept = delete;
-  program &operator=(program &&) noexcept = delete;
+  program(program &&) noexcept = default;
+  program &operator=(program &&) noexcept = default;
 
-  ~program() noexcept { glDeleteProgram(program_id); }
+  ~program() noexcept = default;
 
   bool attach_shader_file(GLenum shader_type,
                           std::filesystem::path source_code) noexcept {
@@ -70,7 +70,7 @@ public:
       std::cerr << "glCompileShader failed" << infoLog << std::endl;
       return false;
     }
-    glAttachShader(program_id, shader_id);
+    glAttachShader(*program_id, shader_id);
     if (check_error()) {
       std::cerr << "glAttachShader failed" << std::endl;
       return false;
@@ -84,7 +84,7 @@ public:
     if (!link()) {
       return false;
     }
-    glUseProgram(program_id);
+    glUseProgram(*program_id);
     if (check_error()) {
       std::cerr << "glUseProgram failed" << std::endl;
       return false;
@@ -98,7 +98,7 @@ public:
     if (!use()) {
       return false;
     }
-    auto location = glGetUniformLocation(program_id, variable_name.c_str());
+    auto location = glGetUniformLocation(*program_id, variable_name.c_str());
     if (location == -1) {
       std::cerr << "glGetUniformLocation failed:" << variable_name << std::endl;
       return false;
@@ -177,7 +177,7 @@ public:
 
   bool check_uniform_assignment() noexcept {
     GLint count = 0;
-    glGetProgramiv(program_id, GL_ACTIVE_UNIFORMS, &count);
+    glGetProgramiv(*program_id, GL_ACTIVE_UNIFORMS, &count);
     if (check_error()) {
       std::cerr << "glGetProgramiv failed" << std::endl;
       return false;
@@ -187,7 +187,7 @@ public:
     for (GLint i = 0; i < count; i++) {
       GLint size;
       GLenum type;
-      glGetActiveUniform(program_id, i, sizeof(name), nullptr, &size, &type,
+      glGetActiveUniform(*program_id, i, sizeof(name), nullptr, &size, &type,
                          name);
       if (assigned_uniform_variables.count(name) == 0) {
         std::cerr << "uniform variable \"" << name << "\" is not assigned"
@@ -201,13 +201,13 @@ public:
 private:
   bool link() {
     if (!linked) {
-      glLinkProgram(program_id);
+      glLinkProgram(*program_id);
 
       GLint success = 0;
-      glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+      glGetProgramiv(*program_id, GL_LINK_STATUS, &success);
       if (!success) {
         GLchar infoLog[512]{};
-        glGetProgramInfoLog(program_id, sizeof(infoLog), nullptr, infoLog);
+        glGetProgramInfoLog(*program_id, sizeof(infoLog), nullptr, infoLog);
         std::cerr << "glLinkProgram failed" << infoLog << std::endl;
         return false;
       }
@@ -217,7 +217,8 @@ private:
   }
 
 private:
-  GLuint program_id{0};
+  std::unique_ptr<GLuint, std::function<void(GLuint *)>> program_id{
+      new GLuint(0), [](auto ptr) { glDeleteProgram(*ptr); }};
   std::set<std::string> assigned_uniform_variables;
   bool linked{false};
 };
