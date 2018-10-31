@@ -85,17 +85,17 @@ public:
     return true;
   }
 
-  template <typename = std::enable_if_t<target == GL_ARRAY_BUFFER>>
   bool vertex_attribute_pointer_simple_offset(GLuint index, GLint size,
                                               GLsizei stride,
                                               size_t offset) noexcept {
+    static_assert(GL_ARRAY_BUFFER == target, "unsupported target");
     return vertex_attribute_pointer(index, size, stride * sizeof(data_type),
                                     offset * sizeof(data_type));
   }
 
-  template <typename = std::enable_if_t<target == GL_ARRAY_BUFFER>>
   bool vertex_attribute_pointer(GLuint index, GLint size, GLsizei stride,
                                 size_t offset) noexcept {
+    static_assert(GL_ARRAY_BUFFER == target, "unsupported target");
     if (!bind()) {
       return false;
     }

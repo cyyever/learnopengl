@@ -140,7 +140,8 @@ public:
         });
       } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
         return set_uniform_by_callback(variable_name, [&value](auto location) {
-          glUniform1i(location, value.get_unit() - GL_TEXTURE0);
+          glUniform1i(location,
+                      static_cast<GLint>(value.get_unit() - GL_TEXTURE0));
         });
       } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
         return set_uniform_by_callback(variable_name, [&value](auto location) {
@@ -187,8 +188,8 @@ public:
     for (GLint i = 0; i < count; i++) {
       GLint size;
       GLenum type;
-      glGetActiveUniform(*program_id, i, sizeof(name), nullptr, &size, &type,
-                         name);
+      glGetActiveUniform(*program_id, static_cast<GLuint>(i), sizeof(name),
+                         nullptr, &size, &type, name);
       if (assigned_uniform_variables.count(name) == 0) {
         std::cerr << "uniform variable \"" << name << "\" is not assigned"
                   << std::endl;

@@ -35,7 +35,7 @@ public:
             const std::map<texture::type, std::vector<std::string>>
                 &texture_variable_names) {
     auto draw_mesh =
-        [this, &prog, &texture_variable_names](
+        [&prog, &texture_variable_names](
             auto &&self,
             const std::unique_ptr<tree_node<opengl::mesh>> &node) -> bool {
       for (auto &value : node->values) {

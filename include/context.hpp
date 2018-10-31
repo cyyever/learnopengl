@@ -79,7 +79,7 @@ public:
     glfwMakeContextCurrent(win);
 
     // glad: load all OpenGL function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
       std::cerr << "Failed to initialize GLAD" << std::endl;
       return {};
     }

@@ -16,7 +16,7 @@ namespace opengl {
 class texture final {
 public:
   struct extra_config {
-    extra_config() : generate_mipmap{true} {};
+    extra_config() : generate_mipmap{true} {}
     bool generate_mipmap;
   };
   enum class type : int {
