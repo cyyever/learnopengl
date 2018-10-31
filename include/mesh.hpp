@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <map>
 #include <stdexcept>
 #include <vector>
 
@@ -24,7 +25,7 @@ public:
 
 public:
   mesh(std::vector<vertex> vertices_, std::vector<GLuint> indices_,
-       std::vector<std::pair<opengl::texture, std::string>> textures_)
+       std::map<texture::type, std::vector<opengl::texture>> textures_)
       : vertices(std::move(vertices_)), indices(std::move(indices_)),
         textures(std::move(textures_)) {
 
@@ -63,7 +64,9 @@ public:
 
   ~mesh() noexcept = default;
 
-  bool draw(opengl::program &prog) {
+  bool draw(opengl::program &prog,
+            const std::map<texture::type, std::vector<std::string>>
+                &texture_variable_names) {
     if (!prog.use()) {
       return false;
     }
@@ -71,10 +74,28 @@ public:
       return false;
     }
 
-    for (auto &[texture, variable_name] : textures) {
-      if (!prog.set_uniform(variable_name, texture)) {
-        return -1;
+    for (auto const &[type, variable_names] : texture_variable_names) {
+      auto it = textures.find(type);
+      if (it == textures.end()) {
+        std::cerr << "no texture for type " << static_cast<int>(type)
+                  << std::endl;
+        return false;
       }
+      if (variable_names.size() > it->second.size()) {
+        std::cerr << "more variable then texture:" << variable_names.size()
+                  << ' ' << it->second.size() << std::endl;
+        return false;
+      }
+      for (size_t i = 0; i < variable_names.size(); i++) {
+
+        if (!prog.set_uniform(variable_names[i], it->second[i])) {
+          return false;
+        }
+      }
+    }
+
+    if (!prog.check_uniform_assignment()) {
+      return false;
     }
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -89,7 +110,7 @@ public:
 private:
   std::vector<vertex> vertices;
   std::vector<GLuint> indices;
-  std::vector<std::pair<opengl::texture, std::string>> textures;
+  std::map<texture::type, std::vector<opengl::texture>> textures;
   opengl::vertex_array VAO{true};
   opengl::buffer<GL_ARRAY_BUFFER, float> VBO;
   opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, GLuint> VEO;

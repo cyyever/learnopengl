@@ -19,6 +19,10 @@ public:
     extra_config() : generate_mipmap{true} {};
     bool generate_mipmap;
   };
+  enum class type : int {
+    diffuse = 1,
+    specular,
+  };
 
   texture(GLenum target_, GLenum unit_, std::filesystem::path image)
       : target(target_), unit(unit_) {
