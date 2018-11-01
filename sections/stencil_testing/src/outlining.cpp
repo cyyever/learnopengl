@@ -76,8 +76,6 @@ int main() {
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
-  glDepthFunc(GL_ALWAYS);
-
   float cube_vertices[] = {
       // positions          // texture Coords
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
@@ -166,6 +164,16 @@ int main() {
     return -1;
   }
 
+  opengl::program border_prog;
+  if (!border_prog.attach_shader_file(GL_VERTEX_SHADER,
+                                      "shader/depth_testing.vs")) {
+    return -1;
+  }
+
+  if (!border_prog.attach_shader_file(GL_FRAGMENT_SHADER, "shader/border.fs")) {
+    return -1;
+  }
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -175,7 +183,7 @@ int main() {
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     auto view = model_camera.get_view_matrix();
     auto projection = glm::perspective(
@@ -189,34 +197,9 @@ int main() {
     if (!scene_prog.set_uniform("projection", projection)) {
       return -1;
     }
-
     if (!scene_prog.set_uniform("model", glm::mat4(1.0f))) {
       return -1;
     }
-    scene_prog.set_vertex_array(cube_VAO);
-
-    if (!scene_prog.set_uniform("texture1", cube_texture)) {
-      return -1;
-    }
-
-    glm::mat4 model =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
-    if (!scene_prog.set_uniform("model", model)) {
-      return -1;
-    }
-    if (!scene_prog.use()) {
-      return -1;
-    }
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
-    if (!scene_prog.set_uniform("model", model)) {
-      return -1;
-    }
-    if (!scene_prog.use()) {
-      return -1;
-    }
-    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     scene_prog.set_vertex_array(plane_VAO);
 
@@ -227,7 +210,75 @@ int main() {
     if (!scene_prog.use()) {
       return -1;
     }
+    glStencilMask(0x00); // make sure we don't update the stencil buffer while
+                         // drawing the floor
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    auto const draw_two_cubes = [&cube_VAO, &cube_texture, &view, &projection](
+                                    opengl::program &scene_prog, float scale) {
+      scene_prog.set_vertex_array(cube_VAO);
+
+      glm::mat4 model =
+          glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
+      model = glm::scale(model, glm::vec3(scale, scale, scale));
+      if (!scene_prog.set_uniform("model", model)) {
+        return false;
+        ;
+      }
+      if (!scene_prog.use()) {
+        return false;
+        ;
+      }
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+
+      model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+      model = glm::scale(model, glm::vec3(scale, scale, scale));
+      if (!scene_prog.set_uniform("model", model)) {
+        return false;
+        ;
+      }
+      if (!scene_prog.use()) {
+        return false;
+        ;
+      }
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+      return true;
+    };
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+
+    glStencilFunc(GL_ALWAYS, 1,
+                  0xFF); // all fragments should update the stencil buffer
+    glStencilMask(0xFF); // enable writing to the stencil buffer
+
+    if (!scene_prog.set_uniform("texture1", cube_texture)) {
+      return false;
+      ;
+    }
+
+    if (!draw_two_cubes(scene_prog, 1.0f)) {
+      return -1;
+    }
+
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00); // disable writing to the stencil buffer
+    glDisable(GL_DEPTH_TEST);
+
+    if (!border_prog.set_uniform("view", view)) {
+      return -1;
+    }
+
+    if (!border_prog.set_uniform("projection", projection)) {
+      return -1;
+    }
+
+    if (!draw_two_cubes(border_prog, 1.1f)) {
+      return -1;
+    }
+
+    glStencilMask(0xFF);
+    glEnable(GL_DEPTH_TEST);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

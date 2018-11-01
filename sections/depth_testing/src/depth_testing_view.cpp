@@ -164,19 +164,6 @@ int main() {
     return -1;
   }
 
-  glm::mat4 model(1.0f);
-  model = glm::translate(
-      model,
-      glm::vec3(0.0f, -1.75f,
-                0.0f)); // translate it down so it's at the center of the scene
-  model = glm::scale(
-      model,
-      glm::vec3(0.2f, 0.2f,
-                0.2f)); // it's a bit too big for our scene, so scale it down
-  if (!scene_prog.set_uniform("model", model)) {
-    return -1;
-  }
-
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -201,6 +188,9 @@ int main() {
       return -1;
     }
 
+    if (!scene_prog.set_uniform("model", glm::mat4(1.0f))) {
+      return -1;
+    }
     scene_prog.set_vertex_array(cube_VAO);
 
     glm::mat4 model =

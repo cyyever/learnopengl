@@ -49,34 +49,47 @@ public:
     return attach_shader(shader_type, sstream.str());
   }
 
-  bool attach_shader(GLenum shader_type,
-                     std::string_view source_code) noexcept {
-    const auto shader_id = glCreateShader(shader_type);
-    if (shader_id == 0) {
+  bool attach_shader(GLenum shader_type, std::string_view source_code,
+                     bool replace = true) noexcept {
+
+    std::unique_ptr<GLuint, std::function<void(GLuint *)>> shader_id(
+        new GLuint(0), [this](auto ptr) {
+          glDetachShader(*program_id, *ptr);
+          glDeleteShader(*ptr);
+          delete ptr;
+        });
+
+    *shader_id = glCreateShader(shader_type);
+    if (*shader_id == 0) {
       std::cerr << "glCreateShader failed" << std::endl;
       return false;
     }
-    auto cleanup = gsl::finally([shader_id]() { glDeleteShader(shader_id); });
+
     const auto source_data = source_code.data();
     GLint source_size = source_code.size();
 
-    glShaderSource(shader_id, 1, &source_data, &source_size);
-    glCompileShader(shader_id);
+    glShaderSource(*shader_id, 1, &source_data, &source_size);
+    glCompileShader(*shader_id);
 
     GLint success = 0;
-    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(*shader_id, GL_COMPILE_STATUS, &success);
     if (!success) {
       GLchar infoLog[512]{};
-      glGetShaderInfoLog(shader_id, sizeof(infoLog), nullptr, infoLog);
+      glGetShaderInfoLog(*shader_id, sizeof(infoLog), nullptr, infoLog);
       std::cerr << "glCompileShader failed" << infoLog << std::endl;
       return false;
     }
-    glAttachShader(*program_id, shader_id);
+    glAttachShader(*program_id, *shader_id);
     if (check_error()) {
       std::cerr << "glAttachShader failed" << std::endl;
       return false;
     }
+    if (replace) {
+      shaders.erase(shader_type);
+    }
+    shaders[shader_type].emplace_back(std::move(shader_id));
     assigned_uniform_variables.clear();
+    assigned_textures.clear();
     linked = false;
     return true;
   }
@@ -207,7 +220,7 @@ private:
       if (!success) {
         GLchar infoLog[512]{};
         glGetProgramInfoLog(*program_id, sizeof(infoLog), nullptr, infoLog);
-        std::cerr << "glLinkProgram failed" << infoLog << std::endl;
+        std::cerr << "glLinkProgram failed:" << infoLog << std::endl;
         return false;
       }
       linked = true;
@@ -258,6 +271,9 @@ private:
       }};
   std::set<std::string> assigned_uniform_variables;
   std::map<GLenum, ::opengl::texture> assigned_textures;
+  std::map<GLenum,
+           std::vector<std::unique_ptr<GLuint, std::function<void(GLuint *)>>>>
+      shaders;
   std::optional<::opengl::vertex_array> VAO;
   bool linked{false};
 };
