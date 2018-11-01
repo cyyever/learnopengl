@@ -28,19 +28,17 @@ public:
       : target(target_), unit(unit_) {
     glGenTextures(1, texture_id.get());
     if (check_error()) {
-      std::cerr << "glGenTextures failed" << std::endl;
-      throw std::runtime_error("glBindTexture failed");
+      throw_exception("glBindTexture failed");
     }
 
     extra_config config;
     config.generate_mipmap = false;
     if (!use(config)) {
-      throw std::runtime_error("use texture failed");
+      throw_exception("use texture failed");
     }
 
     if (!std::filesystem::exists(image)) {
-      std::cerr << "no image " << image << std::endl;
-      throw std::runtime_error("no image");
+      throw_exception(std::string("no image ")+image.string());
     }
     stbi_set_flip_vertically_on_load(image.extension() == ".png");
 
@@ -48,8 +46,7 @@ public:
     auto *data =
         stbi_load(image.string().c_str(), &width, &height, &channel, 0);
     if (!data) {
-      std::cerr << "stbi_load " << image << " failed" << std::endl;
-      throw std::runtime_error("stbi_load failed");
+      throw_exception(std::string("stbi_load ")+image.string()+" failed");
     }
     auto cleanup = gsl::finally([data]() { stbi_image_free(data); });
     GLenum format = 0;
@@ -58,13 +55,12 @@ public:
     } else if (channel == 4) {
       format = GL_RGBA;
     } else {
-      throw std::runtime_error("unsupported channels");
+      throw_exception("unsupported channels");
     }
     glTexImage2D(target, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE,
                  data);
     if (check_error()) {
-      std::cerr << "glTexImage2D failed" << std::endl;
-      throw std::runtime_error("glTexImage2D failed");
+      throw_exception("glTexImage2D failed");
     }
   }
 

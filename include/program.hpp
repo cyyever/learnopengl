@@ -10,6 +10,7 @@
 #include <string_view>
 #include <tuple>
 
+#include "error.hpp"
 #include "texture.hpp"
 
 namespace opengl {
@@ -19,8 +20,7 @@ public:
   program() {
     *program_id = glCreateProgram();
     if (*program_id == 0) {
-      std::cerr << "glCreateProgram failed" << std::endl;
-      throw std::runtime_error("glCreateProgram failed");
+      throw_exception("glCreateProgram failed");
     }
   }
 

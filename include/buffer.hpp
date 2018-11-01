@@ -144,7 +144,7 @@ public:
       throw_exception("glGenVertexArrays failed");
     }
     if (use_after_create && !use()) {
-      throw std::runtime_error("can't use vertex_array");
+      throw_exception("can't use vertex_array");
     }
   }
 

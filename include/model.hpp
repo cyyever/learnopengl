@@ -96,7 +96,7 @@ private:
                                      const ::aiScene &assimp_scene) {
 
     std::vector<mesh::vertex> vertices;
-    for (unsigned int i = 0; i < assimp_mesh.mNumVertices; i++) {
+    for (size_t i = 0; i < assimp_mesh.mNumVertices; i++) {
       mesh::vertex vertex;
       vertex.position.x = assimp_mesh.mVertices[i].x;
       vertex.position.y = assimp_mesh.mVertices[i].y;
@@ -118,9 +118,9 @@ private:
     }
 
     std::vector<GLuint> indices;
-    for (unsigned int i = 0; i < assimp_mesh.mNumFaces; i++) {
+    for (size_t i = 0; i < assimp_mesh.mNumFaces; i++) {
       auto const &face = assimp_mesh.mFaces[i];
-      for (unsigned int j = 0; j < face.mNumIndices; j++)
+      for (size_t j = 0; j < face.mNumIndices; j++)
         indices.push_back(face.mIndices[j]);
     }
 
