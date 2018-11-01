@@ -13,6 +13,7 @@
 
 namespace opengl {
 
+class program;
 class texture final {
 public:
   struct extra_config {
@@ -31,14 +32,12 @@ public:
       throw_exception("glBindTexture failed");
     }
 
-    extra_config config;
-    config.generate_mipmap = false;
-    if (!use(config)) {
+    if (!use()) {
       throw_exception("use texture failed");
     }
 
     if (!std::filesystem::exists(image)) {
-      throw_exception(std::string("no image ")+image.string());
+      throw_exception(std::string("no image ") + image.string());
     }
     stbi_set_flip_vertically_on_load(image.extension() == ".png");
 
@@ -46,7 +45,7 @@ public:
     auto *data =
         stbi_load(image.string().c_str(), &width, &height, &channel, 0);
     if (!data) {
-      throw_exception(std::string("stbi_load ")+image.string()+" failed");
+      throw_exception(std::string("stbi_load ") + image.string() + " failed");
     }
     auto cleanup = gsl::finally([data]() { stbi_image_free(data); });
     GLenum format = 0;
@@ -72,27 +71,6 @@ public:
 
   ~texture() noexcept = default;
 
-  bool use(const extra_config &config = {}) noexcept {
-    glActiveTexture(unit);
-    if (check_error()) {
-      std::cerr << "glActiveTexture failed" << std::endl;
-      return false;
-    }
-    glBindTexture(target, *texture_id);
-    if (check_error()) {
-      std::cerr << "glBindTexture failed" << std::endl;
-      return false;
-    }
-    if (config.generate_mipmap) {
-      glGenerateMipmap(target);
-      if (check_error()) {
-        std::cerr << "glGenerateMipmap failed" << std::endl;
-        return false;
-      }
-    }
-    return true;
-  }
-
   template <typename value_type>
   bool set_parameter(GLenum pname, value_type value) noexcept {
     if constexpr (std::is_same_v<value_type, GLint>) {
@@ -109,13 +87,39 @@ public:
     return true;
   }
 
+private:
+  friend class ::opengl::program;
   GLenum get_unit() const { return unit; }
 
+  bool use() noexcept {
+    glActiveTexture(unit);
+    if (check_error()) {
+      std::cerr << "glActiveTexture failed" << std::endl;
+      return false;
+    }
+    glBindTexture(target, *texture_id);
+    if (check_error()) {
+      std::cerr << "glBindTexture failed" << std::endl;
+      return false;
+    }
+    if (config->generate_mipmap) {
+      glGenerateMipmap(target);
+      if (check_error()) {
+        std::cerr << "glGenerateMipmap failed" << std::endl;
+        return false;
+      }
+    }
+    return true;
+  }
+
 private:
-  std::shared_ptr<GLuint> texture_id{
-      new GLuint(0), [](GLuint *ptr) { glDeleteTextures(1, ptr);delete ptr; }};
-  const GLenum target{};
-  const GLenum unit{};
+  std::shared_ptr<GLuint> texture_id{new GLuint(0), [](GLuint *ptr) {
+                                       glDeleteTextures(1, ptr);
+                                       delete ptr;
+                                     }};
+  std::shared_ptr<extra_config> config{new extra_config{}};
+  GLenum target{};
+  GLenum unit{};
 };
 
 } // namespace opengl

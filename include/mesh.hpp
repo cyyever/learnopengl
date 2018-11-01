@@ -69,13 +69,7 @@ public:
   bool draw(opengl::program &prog,
             const std::map<texture::type, std::vector<std::string>>
                 &texture_variable_names) {
-    if (!prog.use()) {
-      return false;
-    }
-    if (!VAO.use()) {
-      return false;
-    }
-
+    prog.set_vertex_array(VAO);
     for (auto const &[type, variable_names] : texture_variable_names) {
       auto it = textures.find(type);
       if (it == textures.end()) {
@@ -95,10 +89,9 @@ public:
       }
     }
 
-    if (!prog.check_uniform_assignment()) {
+    if (!prog.use()) {
       return false;
     }
-
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     if (check_error()) {
       std::cerr << "glDrawElements failed" << std::endl;

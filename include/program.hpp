@@ -10,6 +10,7 @@
 #include <string_view>
 #include <tuple>
 
+#include "buffer.hpp"
 #include "error.hpp"
 #include "texture.hpp"
 
@@ -27,8 +28,8 @@ public:
   program(const program &) = delete;
   program &operator=(const program &) = delete;
 
-  program(program &&) noexcept = default;
-  program &operator=(program &&) noexcept = default;
+  program(program &&) noexcept = delete;
+  program &operator=(program &&) noexcept = delete;
 
   ~program() noexcept = default;
 
@@ -81,12 +82,20 @@ public:
   }
 
   bool use() noexcept {
-    if (!link()) {
+    if (!install()) {
       return false;
     }
-    glUseProgram(*program_id);
-    if (check_error()) {
-      std::cerr << "glUseProgram failed" << std::endl;
+    if (VAO) {
+      if (!VAO.value().use()) {
+        return false;
+      }
+    }
+    for (auto &[_, texture] : assigned_textures) {
+      if (!texture.use()) {
+        return false;
+      }
+    }
+    if (!check_uniform_assignment()) {
       return false;
     }
     return true;
@@ -95,7 +104,7 @@ public:
   bool set_uniform_by_callback(
       const std::string &variable_name,
       std::function<void(GLint location)> set_function) noexcept {
-    if (!use()) {
+    if (!install()) {
       return false;
     }
     auto location = glGetUniformLocation(*program_id, variable_name.c_str());
@@ -103,12 +112,12 @@ public:
       std::cerr << "glGetUniformLocation failed:" << variable_name << std::endl;
       return false;
     }
-    assigned_uniform_variables.insert(variable_name);
     set_function(location);
     if (check_error()) {
       std::cerr << "set_function failed:" << variable_name << std::endl;
       return false;
     }
+    assigned_uniform_variables.insert(variable_name);
     return true;
   }
 
@@ -139,10 +148,18 @@ public:
           glUniform1f(location, value);
         });
       } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
-        return set_uniform_by_callback(variable_name, [&value](auto location) {
-          glUniform1i(location,
-                      static_cast<GLint>(value.get_unit() - GL_TEXTURE0));
-        });
+        auto res =
+            set_uniform_by_callback(variable_name, [&value](auto location) {
+              glUniform1i(location,
+                          static_cast<GLint>(value.get_unit() - GL_TEXTURE0));
+            });
+        if (res) {
+          auto [it, succ] = assigned_textures.emplace(value.get_unit(), value);
+          if (!succ) {
+            it->second = value;
+          }
+        }
+        return res;
       } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
         return set_uniform_by_callback(variable_name, [&value](auto location) {
           glUniform3fv(location, 1, &value[0]);
@@ -176,6 +193,40 @@ public:
     return false;
   }
 
+  void set_vertex_array(opengl::vertex_array array) noexcept {
+    VAO = std::move(array);
+  }
+
+private:
+  bool link() {
+    if (!linked) {
+      glLinkProgram(*program_id);
+
+      GLint success = 0;
+      glGetProgramiv(*program_id, GL_LINK_STATUS, &success);
+      if (!success) {
+        GLchar infoLog[512]{};
+        glGetProgramInfoLog(*program_id, sizeof(infoLog), nullptr, infoLog);
+        std::cerr << "glLinkProgram failed" << infoLog << std::endl;
+        return false;
+      }
+      linked = true;
+    }
+    return true;
+  }
+
+  bool install() noexcept {
+    if (!link()) {
+      return false;
+    }
+    glUseProgram(*program_id);
+    if (check_error()) {
+      std::cerr << "glUseProgram failed" << std::endl;
+      return false;
+    }
+    return true;
+  }
+
   bool check_uniform_assignment() noexcept {
     GLint count = 0;
     glGetProgramiv(*program_id, GL_ACTIVE_UNIFORMS, &count);
@@ -200,27 +251,14 @@ public:
   }
 
 private:
-  bool link() {
-    if (!linked) {
-      glLinkProgram(*program_id);
-
-      GLint success = 0;
-      glGetProgramiv(*program_id, GL_LINK_STATUS, &success);
-      if (!success) {
-        GLchar infoLog[512]{};
-        glGetProgramInfoLog(*program_id, sizeof(infoLog), nullptr, infoLog);
-        std::cerr << "glLinkProgram failed" << infoLog << std::endl;
-        return false;
-      }
-      linked = true;
-    }
-    return true;
-  }
-
-private:
   std::unique_ptr<GLuint, std::function<void(GLuint *)>> program_id{
-      new GLuint(0), [](auto ptr) { glDeleteProgram(*ptr);delete ptr; }};
+      new GLuint(0), [](auto ptr) {
+        glDeleteProgram(*ptr);
+        delete ptr;
+      }};
   std::set<std::string> assigned_uniform_variables;
+  std::map<GLenum, ::opengl::texture> assigned_textures;
+  std::optional<::opengl::vertex_array> VAO;
   bool linked{false};
 };
 } // namespace opengl

@@ -131,7 +131,10 @@ private:
 
 private:
   std::unique_ptr<GLuint, std::function<void(GLuint *)>> buffer_id{
-      new GLuint(0), [](auto ptr) { glDeleteBuffers(1, ptr); delete ptr; }};
+      new GLuint(0), [](auto ptr) {
+        glDeleteBuffers(1, ptr);
+        delete ptr;
+      }};
 }; // namespace opengl
 
 class vertex_array final {
@@ -148,8 +151,8 @@ public:
     }
   }
 
-  vertex_array(const vertex_array &) = delete;
-  vertex_array &operator=(const vertex_array &) = delete;
+  vertex_array(const vertex_array &) = default;
+  vertex_array &operator=(const vertex_array &) = default;
 
   vertex_array(vertex_array &&) noexcept = default;
   vertex_array &operator=(vertex_array &&) noexcept = default;
@@ -170,10 +173,9 @@ private:
   }
 
 private:
-  std::unique_ptr<GLuint, std::function<void(GLuint *)>> vertex_array_id{
-      new GLuint(0), [](auto ptr) { 
-	glDeleteVertexArrays(1, ptr); 
-	delete ptr;
-      }};
+  std::shared_ptr<GLuint> vertex_array_id{new GLuint(0), [](GLuint *ptr) {
+                                            glDeleteVertexArrays(1, ptr);
+                                            delete ptr;
+                                          }};
 };
 } // namespace opengl

@@ -203,14 +203,9 @@ int main() {
       return -1;
     }
 
-    if (!cube_VAO.use()) {
-      return -1;
-    }
+    scene_prog.set_vertex_array(cube_VAO);
 
     if (!scene_prog.set_uniform("texture1", cube_texture)) {
-      return -1;
-    }
-    if (!cube_texture.use()) {
       return -1;
     }
 
@@ -219,26 +214,29 @@ int main() {
     if (!scene_prog.set_uniform("model", model)) {
       return -1;
     }
+    if (!scene_prog.use()) {
+      return -1;
+    }
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
     if (!scene_prog.set_uniform("model", model)) {
       return -1;
     }
+    if (!scene_prog.use()) {
+      return -1;
+    }
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    if (!plane_VAO.use()) {
-      return -1;
-    }
-
-    if (!plant_texture.use()) {
-      return -1;
-    }
+    scene_prog.set_vertex_array(plane_VAO);
 
     if (!scene_prog.set_uniform("texture1", plant_texture)) {
       return -1;
     }
 
+    if (!scene_prog.use()) {
+      return -1;
+    }
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
