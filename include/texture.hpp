@@ -32,7 +32,7 @@ public:
       throw_exception("glBindTexture failed");
     }
 
-    if (!use()) {
+    if (!install()) {
       throw_exception("use texture failed");
     }
 
@@ -91,7 +91,7 @@ private:
   friend class ::opengl::program;
   GLenum get_unit() const { return unit; }
 
-  bool use() noexcept {
+  bool install() noexcept {
     glActiveTexture(unit);
     if (check_error()) {
       std::cerr << "glActiveTexture failed" << std::endl;
@@ -100,6 +100,13 @@ private:
     glBindTexture(target, *texture_id);
     if (check_error()) {
       std::cerr << "glBindTexture failed" << std::endl;
+      return false;
+    }
+    return true;
+  }
+
+  bool use() noexcept {
+    if (!install()) {
       return false;
     }
     if (config->generate_mipmap) {
