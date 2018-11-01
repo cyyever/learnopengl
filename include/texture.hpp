@@ -118,8 +118,8 @@ public:
 private:
   std::shared_ptr<GLuint> texture_id{
       new GLuint(0), [](GLuint *ptr) { glDeleteTextures(1, ptr);delete ptr; }};
-  GLenum target{};
-  GLenum unit{};
+  const GLenum target{};
+  const GLenum unit{};
 };
 
 } // namespace opengl
