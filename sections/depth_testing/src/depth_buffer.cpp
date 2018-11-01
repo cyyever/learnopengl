@@ -76,8 +76,6 @@ int main() {
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
-  glDepthFunc(GL_ALWAYS);
-
   float cube_vertices[] = {
       // positions          // texture Coords
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
@@ -139,22 +137,6 @@ int main() {
     return -1;
   }
 
-  opengl::texture cube_texture(GL_TEXTURE_2D, GL_TEXTURE0,
-                               "resource/marble.jpg");
-
-  cube_texture.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-  cube_texture.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-  cube_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  cube_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  opengl::texture plant_texture(GL_TEXTURE_2D, GL_TEXTURE0,
-                                "resource/metal.png");
-
-  plant_texture.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-  plant_texture.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-  plant_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  plant_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
   opengl::program scene_prog;
   if (!scene_prog.attach_shader_file(GL_VERTEX_SHADER,
                                      "shader/depth_testing.vs")) {
@@ -162,7 +144,7 @@ int main() {
   }
 
   if (!scene_prog.attach_shader_file(GL_FRAGMENT_SHADER,
-                                     "shader/depth_testing.fs")) {
+                                     "shader/depth_buffer.fs")) {
     return -1;
   }
 
@@ -205,10 +187,6 @@ int main() {
 
     scene_prog.set_vertex_array(cube_VAO);
 
-    if (!scene_prog.set_uniform("texture1", cube_texture)) {
-      return -1;
-    }
-
     glm::mat4 model =
         glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
     if (!scene_prog.set_uniform("model", model)) {
@@ -229,10 +207,6 @@ int main() {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     scene_prog.set_vertex_array(plane_VAO);
-
-    if (!scene_prog.set_uniform("texture1", plant_texture)) {
-      return -1;
-    }
 
     if (!scene_prog.use()) {
       return -1;
