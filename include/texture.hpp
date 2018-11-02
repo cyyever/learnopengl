@@ -39,7 +39,7 @@ public:
     if (!std::filesystem::exists(image)) {
       throw_exception(std::string("no image ") + image.string());
     }
-    stbi_set_flip_vertically_on_load(image.extension() == ".png");
+    stbi_set_flip_vertically_on_load(true);
 
     int width, height, channel;
     auto *data =
@@ -56,7 +56,7 @@ public:
     } else {
       throw_exception("unsupported channels");
     }
-    glTexImage2D(target, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE,
+    glTexImage2D(target, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE,
                  data);
     if (check_error()) {
       throw_exception("glTexImage2D failed");
