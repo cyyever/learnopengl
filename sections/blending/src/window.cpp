@@ -76,6 +76,9 @@ int main() {
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   float cube_vertices[] = {
       // positions          // texture Coords
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
@@ -111,7 +114,7 @@ int main() {
       5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, -5.0f,
       0.0f, 2.0f,  5.0f,  -0.5f, -5.0f, 2.0f,  2.0f};
 
-  float grass_vertices[] = {
+  float window_vertices[] = {
       // positions         // texture Coords (swapped y coordinates because
       // texture is flipped upside down)
       0.0f, 0.5f, 0.0f, 0.0f,  1.0f, 0.0f, -0.5f, 0.0f,
@@ -146,16 +149,16 @@ int main() {
     return -1;
   }
 
-  opengl::vertex_array grass_VAO;
-  opengl::buffer<GL_ARRAY_BUFFER, float> grass_VBO;
+  opengl::vertex_array window_VAO;
+  opengl::buffer<GL_ARRAY_BUFFER, float> window_VBO;
 
-  if (!grass_VBO.write(grass_vertices)) {
+  if (!window_VBO.write(window_vertices)) {
     return -1;
   }
-  if (!grass_VBO.vertex_attribute_pointer_simple_offset(0, 3, 5, 0)) {
+  if (!window_VBO.vertex_attribute_pointer_simple_offset(0, 3, 5, 0)) {
     return -1;
   }
-  if (!grass_VBO.vertex_attribute_pointer_simple_offset(1, 2, 5, 3)) {
+  if (!window_VBO.vertex_attribute_pointer_simple_offset(1, 2, 5, 3)) {
     return -1;
   }
 
@@ -175,28 +178,30 @@ int main() {
   plant_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   plant_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  opengl::texture grass_texture(GL_TEXTURE_2D, GL_TEXTURE0,
-                                "resource/grass.png");
+  opengl::texture window_texture(GL_TEXTURE_2D, GL_TEXTURE0,
+                                 "resource/window.png");
 
-  grass_texture.set_parameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  grass_texture.set_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  grass_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  grass_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  window_texture.set_parameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  window_texture.set_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  window_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  window_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   opengl::program scene_prog;
   if (!scene_prog.attach_shader_file(GL_VERTEX_SHADER, "shader/blend.vs")) {
     return -1;
   }
 
-  if (!scene_prog.attach_shader_file(GL_FRAGMENT_SHADER, "shader/grass.fs")) {
+  if (!scene_prog.attach_shader_file(GL_FRAGMENT_SHADER, "shader/window.fs")) {
     return -1;
   }
 
-  std::vector<glm::vec3> vegetation;
-  vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-  vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-  vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-  vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-  vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+  std::map<float, glm::vec3> windows;
+  for (auto &position_vec :
+       {glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f),
+        glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
+        glm::vec3(0.5f, 0.0f, -0.6f)}) {
+    float distance = glm::length(scene_camera.get_position() - position_vec);
+    windows.emplace(distance, std::move(position_vec));
+  }
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -261,15 +266,15 @@ int main() {
     }
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    scene_prog.set_vertex_array(grass_VAO);
+    scene_prog.set_vertex_array(window_VAO);
 
-    if (!scene_prog.set_uniform("texture1", grass_texture)) {
+    if (!scene_prog.set_uniform("texture1", window_texture)) {
       return -1;
     }
 
-    for (auto const &translate_vec : vegetation) {
+    for (auto it = windows.rbegin(); it != windows.rend(); it++) {
       model = glm::mat4(1.0f);
-      model = glm::translate(model, translate_vec);
+      model = glm::translate(model, it->second);
       if (!scene_prog.set_uniform("model", model)) {
         return -1;
       }
