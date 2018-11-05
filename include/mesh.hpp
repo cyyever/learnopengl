@@ -48,7 +48,8 @@ public:
                                       offsetof(vertex, normal))) {
       throw_exception("VBO vertex_attribute_pointer failed");
     }
-    if (!VBO.vertex_attribute_pointer(2, 3, sizeof(vertex),
+
+    if (!VBO.vertex_attribute_pointer(2, 2, sizeof(vertex),
                                       offsetof(vertex, texture_coord))) {
       throw_exception("VBO vertex_attribute_pointer failed");
     }
@@ -82,6 +83,10 @@ public:
                   << ' ' << it->second.size() << std::endl;
         return false;
       }
+      if (variable_names.size() < it->second.size()) {
+        std::cerr << "less variable then texture:" << variable_names.size()
+                  << ' ' << it->second.size() << std::endl;
+      }
       for (size_t i = 0; i < variable_names.size(); i++) {
         if (!prog.set_uniform(variable_names[i], it->second[i])) {
           return false;
@@ -97,7 +102,6 @@ public:
       std::cerr << "glDrawElements failed" << std::endl;
       return false;
     }
-
     return true;
   }
 
