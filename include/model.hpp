@@ -63,7 +63,8 @@ private:
 
     Assimp::Importer importer;
     const auto scene = importer.ReadFile(
-        model_file.string().c_str(), aiProcess_Triangulate | aiProcess_FlipUVs);
+        model_file.string().c_str(),
+        aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
