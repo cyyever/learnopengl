@@ -138,6 +138,12 @@ public:
     if (!load_texture_image(image, GL_TEXTURE_2D, config)) {
       throw_exception("load_texture_image failed");
     }
+    if (!set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR)) {
+      throw_exception("set GL_TEXTURE_MIN_FILTER failed");
+    }
+    if (!set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)) {
+      throw_exception("set GL_TEXTURE_MAG_FILTER failed");
+    }
     if (config.generate_mipmap) {
       glGenerateMipmap(target);
       if (check_error()) {
@@ -172,16 +178,22 @@ public:
       }
     }
 
-    if (config.generate_mipmap) {
-      glGenerateMipmap(target);
-      if (check_error()) {
-        throw_exception("glGenerateMipmap failed");
-      }
-    }
     for (auto pname :
          {GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R}) {
       if (!set_parameter(pname, GL_CLAMP_TO_EDGE)) {
         throw_exception("set_parameter failed");
+      }
+    }
+    if (!set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR)) {
+      throw_exception("set GL_TEXTURE_MIN_FILTER failed");
+    }
+    if (!set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)) {
+      throw_exception("set GL_TEXTURE_MAG_FILTER failed");
+    }
+    if (config.generate_mipmap) {
+      glGenerateMipmap(target);
+      if (check_error()) {
+        throw_exception("glGenerateMipmap failed");
       }
     }
   }

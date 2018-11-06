@@ -39,11 +39,11 @@ public:
     std::stringstream sstream;
     sstream << source_file.rdbuf();
     if (source_file.fail() || source_file.bad()) {
-      std::cout << "read " << source_code << " failed";
+      std::cerr << "read " << source_code << " failed";
       return false;
     }
     if (!sstream) {
-      std::cout << "store " << source_code << " in stringstream failed";
+      std::cerr << "store " << source_code << " in stringstream failed";
       return false;
     }
     return attach_shader(shader_type, sstream.str());
@@ -108,7 +108,7 @@ public:
 
     GLenum next_texture_unit{GL_TEXTURE0};
     for (auto &[variable_name, texture] : assigned_textures) {
-      if (!texture.use(next_texture_unit)) {
+      if (!texture->use(next_texture_unit)) {
         return false;
       }
 
@@ -177,13 +177,13 @@ public:
           glUniform1f(location, value);
         });
       } else if constexpr (std::is_same_v<real_value_type,
-                                          ::opengl::texture_2D>) {
-
-        auto [it, succ] = assigned_textures.emplace(variable_name, value);
-        if (!succ) {
-          it->second = value;
-        }
-
+                                          ::opengl::texture_2D> ||
+                           std::is_same_v<real_value_type,
+                                          ::opengl::texture_cube_map>) {
+        std::unique_ptr<real_value_type> texture_ptr =
+            std::make_unique<real_value_type>(value);
+        assigned_textures.insert_or_assign(variable_name,
+                                           std::move(texture_ptr));
         return true;
       } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
         return set_uniform_by_callback(variable_name, [&value](auto location) {
@@ -282,7 +282,7 @@ private:
         delete ptr;
       }};
   std::set<std::string> assigned_uniform_variables;
-  std::map<std::string, ::opengl::texture_2D> assigned_textures;
+  std::map<std::string, std::unique_ptr<::opengl::texture>> assigned_textures;
   std::map<GLenum,
            std::vector<std::unique_ptr<GLuint, std::function<void(GLuint *)>>>>
       shaders;
