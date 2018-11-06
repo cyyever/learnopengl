@@ -69,12 +69,14 @@ int main() {
     std::cerr << "create opengl context failed" << std::endl;
     return -1;
   }
+
   auto &window = window_opt.value();
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
+  glDepthFunc(GL_LEQUAL);
 
   float skybox_vertices[] = {
       // positions
@@ -192,29 +194,8 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDepthMask(GL_FALSE);
 
     auto view = scene_camera.get_view_matrix();
-
-    if (!skybox_prog.set_uniform("view", glm::mat4(glm::mat3(view)))) {
-      return -1;
-    }
-
-    auto projection = glm::perspective(
-        scene_camera.get_fov(),
-        static_cast<float>(screen_width) / screen_height, 0.1f, 100.0f);
-
-    if (!skybox_prog.set_uniform("projection", projection)) {
-      return -1;
-    }
-
-    skybox_prog.set_vertex_array(skybox_VAO);
-
-    if (!skybox_prog.use()) {
-      return -1;
-    }
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glDepthMask(GL_TRUE);
 
     if (!cube_prog.set_uniform("model", glm::mat4(1.0f))) {
       return -1;
@@ -224,6 +205,10 @@ int main() {
       return -1;
     }
 
+    auto projection = glm::perspective(
+        scene_camera.get_fov(),
+        static_cast<float>(screen_width) / screen_height, 0.1f, 100.0f);
+
     if (!cube_prog.set_uniform("projection", projection)) {
       return -1;
     }
@@ -231,6 +216,21 @@ int main() {
     cube_prog.set_vertex_array(cube_VAO);
 
     if (!cube_prog.use()) {
+      return -1;
+    }
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    if (!skybox_prog.set_uniform("view", glm::mat4(glm::mat3(view)))) {
+      return -1;
+    }
+
+    if (!skybox_prog.set_uniform("projection", projection)) {
+      return -1;
+    }
+
+    skybox_prog.set_vertex_array(skybox_VAO);
+
+    if (!skybox_prog.use()) {
       return -1;
     }
     glDrawArrays(GL_TRIANGLES, 0, 36);
