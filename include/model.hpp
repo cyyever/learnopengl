@@ -32,7 +32,7 @@ public:
   ~model() noexcept = default;
 
   bool draw(opengl::program &prog,
-            const std::map<texture_type, std::vector<std::string>>
+            const std::map<texture_2D::type, std::vector<std::string>>
                 &texture_variable_names) {
     auto draw_mesh =
         [&prog, &texture_variable_names](
@@ -128,26 +128,26 @@ private:
         indices.push_back(face.mIndices[j]);
     }
 
-    std::map<opengl::texture_type, std::vector<opengl::texture<GL_TEXTURE_2D>>>
+    std::map<opengl::texture_2D::type, std::vector<opengl::texture_2D>>
         textures;
     auto const material = assimp_scene.mMaterials[assimp_mesh.mMaterialIndex];
-    textures[opengl::texture_type::diffuse] =
+    textures[opengl::texture_2D::type::diffuse] =
         load_assimp_texture(*material, aiTextureType_DIFFUSE);
-    textures[opengl::texture_type::specular] =
+    textures[opengl::texture_2D::type::specular] =
         load_assimp_texture(*material, aiTextureType_SPECULAR);
     return ::opengl::mesh(vertices, indices, textures);
   }
 
-  std::vector<opengl::texture<GL_TEXTURE_2D>>
+  std::vector<opengl::texture_2D>
   load_assimp_texture(const ::aiMaterial &material, ::aiTextureType type) {
-    std::vector<opengl::texture<GL_TEXTURE_2D>> textures;
+    std::vector<opengl::texture_2D> textures;
     for (size_t i = 0; i < material.GetTextureCount(type); i++) {
       aiString file_path;
       material.GetTexture(type, i, &file_path);
       auto abs_path = std::filesystem::absolute(model_file.parent_path() /
                                                 file_path.C_Str());
 
-      opengl::texture<GL_TEXTURE_2D>::extra_config config;
+      opengl::texture_2D::extra_config config;
       config.flip_y = false;
       auto [it, has_emplaced] =
           loaded_textures.try_emplace(abs_path, abs_path, config);
@@ -173,8 +173,7 @@ private:
   };
   std::unique_ptr<tree_node<opengl::mesh>> meshes;
 
-  std::map<std::filesystem::path, opengl::texture<GL_TEXTURE_2D>>
-      loaded_textures;
+  std::map<std::filesystem::path, opengl::texture_2D> loaded_textures;
 };
 
 } // namespace opengl

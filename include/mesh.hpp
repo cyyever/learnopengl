@@ -25,8 +25,7 @@ public:
 
 public:
   mesh(std::vector<vertex> vertices_, std::vector<GLuint> indices_,
-       std::map<texture_type, std::vector<opengl::texture<GL_TEXTURE_2D>>>
-           textures_)
+       std::map<texture_2D::type, std::vector<opengl::texture_2D>> textures_)
       : vertices(std::move(vertices_)), indices(std::move(indices_)),
         textures(std::move(textures_)) {
 
@@ -69,7 +68,7 @@ public:
   ~mesh() noexcept = default;
 
   bool draw(opengl::program &prog,
-            const std::map<texture_type, std::vector<std::string>>
+            const std::map<texture_2D::type, std::vector<std::string>>
                 &texture_variable_names) {
     prog.set_vertex_array(VAO);
     prog.clear_textures();
@@ -110,7 +109,7 @@ public:
 private:
   std::vector<vertex> vertices;
   std::vector<GLuint> indices;
-  std::map<texture_type, std::vector<opengl::texture<GL_TEXTURE_2D>>> textures;
+  std::map<texture_2D::type, std::vector<opengl::texture_2D>> textures;
   opengl::vertex_array VAO{true};
   opengl::buffer<GL_ARRAY_BUFFER, float> VBO;
   opengl::buffer<GL_ELEMENT_ARRAY_BUFFER, GLuint> EBO;

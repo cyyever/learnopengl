@@ -177,7 +177,7 @@ public:
           glUniform1f(location, value);
         });
       } else if constexpr (std::is_same_v<real_value_type,
-                                          ::opengl::texture<GL_TEXTURE_2D>>) {
+                                          ::opengl::texture_2D>) {
 
         auto [it, succ] = assigned_textures.emplace(variable_name, value);
         if (!succ) {
@@ -282,7 +282,7 @@ private:
         delete ptr;
       }};
   std::set<std::string> assigned_uniform_variables;
-  std::map<std::string, ::opengl::texture<GL_TEXTURE_2D>> assigned_textures;
+  std::map<std::string, ::opengl::texture_2D> assigned_textures;
   std::map<GLenum,
            std::vector<std::unique_ptr<GLuint, std::function<void(GLuint *)>>>>
       shaders;

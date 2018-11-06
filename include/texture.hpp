@@ -13,11 +13,6 @@
 
 namespace opengl {
 
-enum class texture_type : int {
-  diffuse = 1,
-  specular,
-};
-
 template <GLenum target> class texture final {
   static_assert(target == GL_TEXTURE_2D, "unsupported texture target");
 
@@ -26,6 +21,11 @@ public:
     extra_config() : generate_mipmap{true}, flip_y{true} {}
     bool generate_mipmap;
     bool flip_y;
+  };
+
+  enum class type : int {
+    diffuse = 1,
+    specular,
   };
 
   explicit texture(std::filesystem::path image, extra_config config = {}) {
@@ -124,4 +124,5 @@ private:
                                      }};
 };
 
+using texture_2D = texture<GL_TEXTURE_2D>;
 } // namespace opengl
