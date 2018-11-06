@@ -13,33 +13,38 @@
 
 namespace opengl {
 
-class program;
-class texture final {
+enum class texture_type : int {
+  diffuse = 1,
+  specular,
+};
+
+template <GLenum target> class texture final {
+  static_assert(target == GL_TEXTURE_2D, "unsupported texture target");
+
 public:
   struct extra_config {
-    extra_config() : generate_mipmap{true} {}
+    extra_config() : generate_mipmap{true}, flip_y{true} {}
     bool generate_mipmap;
-  };
-  enum class type : int {
-    diffuse = 1,
-    specular,
+    bool flip_y;
   };
 
-  texture(GLenum target_, GLenum unit_, std::filesystem::path image)
-      : target(target_), unit(unit_) {
+  explicit texture(std::filesystem::path image, extra_config config = {}) {
+
+    if (!std::filesystem::exists(image)) {
+      throw_exception(std::string("no image ") + image.string());
+    }
+
     glGenTextures(1, texture_id.get());
     if (check_error()) {
       throw_exception("glBindTexture failed");
     }
 
-    if (!install()) {
-      throw_exception("use texture failed");
+    glBindTexture(target, *texture_id);
+    if (check_error()) {
+      throw_exception("glBindTexture failed");
     }
 
-    if (!std::filesystem::exists(image)) {
-      throw_exception(std::string("no image ") + image.string());
-    }
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(config.flip_y);
 
     int width, height, channel;
     auto *data =
@@ -56,10 +61,20 @@ public:
     } else {
       throw_exception("unsupported channels");
     }
-    glTexImage2D(target, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE,
-                 data);
-    if (check_error()) {
-      throw_exception("glTexImage2D failed");
+
+    if constexpr (target == GL_TEXTURE_2D) {
+      glTexImage2D(target, 0, GL_RGBA, width, height, 0, format,
+                   GL_UNSIGNED_BYTE, data);
+      if (check_error()) {
+        throw_exception("glTexImage2D failed");
+      }
+    }
+
+    if (config.generate_mipmap) {
+      glGenerateMipmap(target);
+      if (check_error()) {
+        throw_exception("glGenerateMipmap failed");
+      }
     }
   }
 
@@ -87,11 +102,8 @@ public:
     return true;
   }
 
-private:
-  friend class ::opengl::program;
-  GLenum get_unit() const { return unit; }
-
-  bool install() noexcept {
+public:
+  bool use(GLenum unit) noexcept {
     glActiveTexture(unit);
     if (check_error()) {
       std::cerr << "glActiveTexture failed" << std::endl;
@@ -105,28 +117,11 @@ private:
     return true;
   }
 
-  bool use() noexcept {
-    if (!install()) {
-      return false;
-    }
-    if (config->generate_mipmap) {
-      glGenerateMipmap(target);
-      if (check_error()) {
-        std::cerr << "glGenerateMipmap failed" << std::endl;
-        return false;
-      }
-    }
-    return true;
-  }
-
 private:
   std::shared_ptr<GLuint> texture_id{new GLuint(0), [](GLuint *ptr) {
                                        glDeleteTextures(1, ptr);
                                        delete ptr;
                                      }};
-  std::shared_ptr<extra_config> config{new extra_config{}};
-  GLenum target{};
-  GLenum unit{};
 };
 
 } // namespace opengl

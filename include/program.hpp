@@ -89,10 +89,12 @@ public:
     }
     shaders[shader_type].emplace_back(std::move(shader_id));
     assigned_uniform_variables.clear();
-    assigned_textures.clear();
+    clear_textures();
     linked = false;
     return true;
   }
+
+  void clear_textures() { assigned_textures.clear(); }
 
   bool use() noexcept {
     if (!install()) {
@@ -103,14 +105,28 @@ public:
         return false;
       }
     }
-    for (auto &[_, texture] : assigned_textures) {
-      if (!texture.use()) {
+
+    GLenum next_texture_unit{GL_TEXTURE0};
+    for (auto &[variable_name, texture] : assigned_textures) {
+      if (!texture.use(next_texture_unit)) {
         return false;
       }
+
+      if (!set_uniform_by_callback(
+              variable_name, [next_texture_unit](auto location) {
+                glUniform1i(location, next_texture_unit - GL_TEXTURE0);
+              })) {
+        return false;
+      }
+
+      next_texture_unit++;
     }
+
+#ifndef NDEBUG
     if (!check_uniform_assignment()) {
       return false;
     }
+#endif
     return true;
   }
 
@@ -160,19 +176,15 @@ public:
         return set_uniform_by_callback(variable_name, [value](auto location) {
           glUniform1f(location, value);
         });
-      } else if constexpr (std::is_same_v<real_value_type, ::opengl::texture>) {
-        auto res =
-            set_uniform_by_callback(variable_name, [&value](auto location) {
-              glUniform1i(location,
-                          static_cast<GLint>(value.get_unit() - GL_TEXTURE0));
-            });
-        if (res) {
-          auto [it, succ] = assigned_textures.emplace(value.get_unit(), value);
-          if (!succ) {
-            it->second = value;
-          }
+      } else if constexpr (std::is_same_v<real_value_type,
+                                          ::opengl::texture<GL_TEXTURE_2D>>) {
+
+        auto [it, succ] = assigned_textures.emplace(variable_name, value);
+        if (!succ) {
+          it->second = value;
         }
-        return res;
+
+        return true;
       } else if constexpr (std::is_same_v<real_value_type, glm::vec3>) {
         return set_uniform_by_callback(variable_name, [&value](auto location) {
           glUniform3fv(location, 1, &value[0]);
@@ -270,7 +282,7 @@ private:
         delete ptr;
       }};
   std::set<std::string> assigned_uniform_variables;
-  std::map<GLenum, ::opengl::texture> assigned_textures;
+  std::map<std::string, ::opengl::texture<GL_TEXTURE_2D>> assigned_textures;
   std::map<GLenum,
            std::vector<std::unique_ptr<GLuint, std::function<void(GLuint *)>>>>
       shaders;
