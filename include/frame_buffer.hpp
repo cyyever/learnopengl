@@ -58,6 +58,15 @@ public:
     return true;
   }
 
+  static bool use_default() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (check_error()) {
+      std::cerr << "glBindFramebuffer failed" << std::endl;
+      return false;
+    }
+    return true;
+  }
+
 private:
   bool bind() noexcept {
     glBindFramebuffer(GL_FRAMEBUFFER, *frame_buffer_id);
