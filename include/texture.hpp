@@ -126,6 +126,8 @@ protected:
   GLenum target{};
 };
 
+class frame_buffer;
+
 class texture_2D final : public texture {
 public:
   explicit texture_2D(std::filesystem::path image, extra_config config = {})
@@ -152,6 +154,26 @@ public:
     }
   }
 
+  explicit texture_2D(GLsizei width, GLsizei height) : texture(GL_TEXTURE_2D) {
+
+    if (!bind()) {
+      throw_exception("bind failed");
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, nullptr);
+    if (check_error()) {
+      throw_exception("glTexImage2D failed");
+    }
+
+    if (!set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR)) {
+      throw_exception("set GL_TEXTURE_MIN_FILTER failed");
+    }
+    if (!set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR)) {
+      throw_exception("set GL_TEXTURE_MAG_FILTER failed");
+    }
+  }
+
   texture_2D(const texture_2D &) = default;
   texture_2D &operator=(const texture_2D &) = default;
 
@@ -159,6 +181,10 @@ public:
   texture_2D &operator=(texture_2D &&) noexcept = default;
 
   ~texture_2D() override = default;
+
+private:
+  friend class frame_buffer;
+  GLuint get_id() const { return *texture_id; }
 };
 
 class texture_cube_map final : public texture {

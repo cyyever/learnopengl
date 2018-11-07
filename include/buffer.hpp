@@ -24,7 +24,7 @@ template <GLenum target, typename data_type> class buffer final {
                 "unsupported target/data type");
 
 public:
-  explicit buffer() {
+  buffer() {
     if constexpr (opengl::context::gl_minor_version < 5) {
       glGenBuffers(1, buffer_id.get());
       if (check_error()) {
