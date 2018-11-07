@@ -137,21 +137,9 @@ int main() {
     return -1;
   }
 
-  opengl::texture cube_texture(GL_TEXTURE_2D, GL_TEXTURE0,
-                               "resource/marble.jpg");
+  opengl::texture_2D cube_texture("resource/marble.jpg");
 
-  cube_texture.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-  cube_texture.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-  cube_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  cube_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  opengl::texture plant_texture(GL_TEXTURE_2D, GL_TEXTURE0,
-                                "resource/metal.png");
-
-  plant_texture.set_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-  plant_texture.set_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-  plant_texture.set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  plant_texture.set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  opengl::texture_2D plant_texture("resource/metal.png");
 
   opengl::program scene_prog;
   if (!scene_prog.attach_shader_file(GL_VERTEX_SHADER,
