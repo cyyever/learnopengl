@@ -1,6 +1,3 @@
-SET(glad_DIR ${CMAKE_CURRENT_BINARY_DIR}/glad)
-ADD_CUSTOM_COMMAND(OUTPUT ${glad_DIR}/src/glad.c COMMAND ${glad_binary} --reproducible --profile core --generator=c --spec gl --out-path=${glad_DIR})
-
 get_directory_property(progs BUILDSYSTEM_TARGETS)
 
 FOREACH(prog ${progs})
@@ -8,13 +5,8 @@ FOREACH(prog ${progs})
   if(NOT property_var STREQUAL EXECUTABLE)
     continue()
   endif()
+  TARGET_LINK_LIBRARIES(${prog} PRIVATE OpenGLCPP)
 
-  TARGET_SOURCES(${prog} PRIVATE ${glad_DIR}/src/glad.c)
-  TARGET_LINK_LIBRARIES(${prog} PRIVATE OpenGL::GL glfw ${CMAKE_DL_LIBS} glm ${ASSIMP_LIBRARIES})
-  IF(cxxfs_lib)
-    TARGET_LINK_LIBRARIES(${prog} PRIVATE ${cxxfs_lib})
-  ENDIF()
-  TARGET_INCLUDE_DIRECTORIES(${prog} PRIVATE ${glad_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/../include ${ASSIMP_INCLUDE_DIRS})
   ADD_CUSTOM_COMMAND(TARGET ${prog} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/../resource ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/resource)
   SET(shader_dir ${CMAKE_CURRENT_SOURCE_DIR}/shader)
   IF(EXISTS ${shader_dir})
