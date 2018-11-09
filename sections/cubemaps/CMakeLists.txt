@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 
-PROJECT(Cubemaps)
+PROJECT(Cubemaps LANGUAGES CXX)
 
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/../../cmake/packages.cmake)
 
