@@ -1,10 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 
-PROJECT(Cubemaps LANGUAGES CXX)
+PROJECT(Advanced-GLSL LANGUAGES CXX)
 
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/../../cmake/packages.cmake)
 
-FOREACH(prog skybox reflection refraction)
+FOREACH(prog skybox reflection)
   ADD_EXECUTABLE(${prog} ${CMAKE_CURRENT_LIST_DIR}/src/${prog}.cpp)
 ENDFOREACH()
 
