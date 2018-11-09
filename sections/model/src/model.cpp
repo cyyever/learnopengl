@@ -4,11 +4,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "buffer.hpp"
-#include "camera.hpp"
-#include "context.hpp"
-#include "model.hpp"
-#include "program.hpp"
+#include "opengl_cpp/buffer.hpp"
+#include "opengl_cpp/camera.hpp"
+#include "opengl_cpp/context.hpp"
+#include "opengl_cpp/model.hpp"
+#include "opengl_cpp/program.hpp"
 
 namespace {
 constexpr int screen_width = 800;
