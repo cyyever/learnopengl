@@ -41,11 +41,6 @@ void mouse_callback([[maybe_unused]] GLFWwindow *window, double xpos,
   scene_camera.lookat(xoffset, yoffset);
 }
 
-void scroll_callback([[maybe_unused]] GLFWwindow *window,
-                     [[maybe_unused]] double xoffset, double yoffset) {
-  scene_camera.add_fov(yoffset);
-}
-
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
@@ -75,108 +70,31 @@ int main() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
-  glfwSetScrollCallback(window, scroll_callback);
   glDepthFunc(GL_LEQUAL);
 
-  float skybox_vertices[] = {
+  float cube_vertices[] = {
       // positions
-      -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
-      1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+      -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f,
+      0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
 
-      -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
-      -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
+      0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,
 
-      1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
-      1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
+      -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
+      -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
 
-      -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
-      1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
+      0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f,
+      0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
 
-      -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
-      1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
+      -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,
+      0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
 
-      -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
-      1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
-
-  opengl::vertex_array skybox_VAO;
-  opengl::buffer<GL_ARRAY_BUFFER, float> skybox_VBO;
-
-  if (!skybox_VBO.write(skybox_vertices)) {
-    return -1;
-  }
-  if (!skybox_VBO.vertex_attribute_pointer_simple_offset(0, 3, 3, 0)) {
-    return -1;
-  }
-
-  opengl::texture::extra_config config;
-  config.flip_y = false;
-  opengl::texture_cube_map skybox_texture(
-      std::array<std::filesystem::path, 6>{
-          "resource/skybox/right.jpg", "resource/skybox/left.jpg",
-          "resource/skybox/top.jpg", "resource/skybox/bottom.jpg",
-          "resource/skybox/front.jpg", "resource/skybox/back.jpg"},
-      config);
-
-  opengl::program skybox_prog;
-  if (!skybox_prog.attach_shader_file(GL_VERTEX_SHADER, "shader/skybox.vs")) {
-    return -1;
-  }
-
-  if (!skybox_prog.attach_shader_file(GL_FRAGMENT_SHADER, "shader/skybox.fs")) {
-    return -1;
-  }
-
-  if (!skybox_prog.set_uniform("skybox", skybox_texture)) {
-    return -1;
-  }
-
-    float cube_vertices[] = {
-        // positions         
-        -0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f, -0.5f,  
-         0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f, -0.5f,  
-        -0.5f,  0.5f, -0.5f, 
-        -0.5f, -0.5f, -0.5f, 
-
-        -0.5f, -0.5f,  0.5f, 
-         0.5f, -0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f,  0.5f, 
-        -0.5f, -0.5f,  0.5f, 
-
-        -0.5f,  0.5f,  0.5f, 
-        -0.5f,  0.5f, -0.5f, 
-        -0.5f, -0.5f, -0.5f, 
-        -0.5f, -0.5f, -0.5f, 
-        -0.5f, -0.5f,  0.5f, 
-        -0.5f,  0.5f,  0.5f, 
-
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f, -0.5f,  
-         0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-
-        -0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f, -0.5f,  
-         0.5f, -0.5f,  0.5f,  
-         0.5f, -0.5f,  0.5f,  
-        -0.5f, -0.5f,  0.5f, 
-        -0.5f, -0.5f, -0.5f, 
-
-        -0.5f,  0.5f, -0.5f, 
-         0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f,  0.5f, 
-        -0.5f,  0.5f, -0.5f, 
-    };
+      -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,
+      0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f,
+  };
 
   opengl::vertex_array cube_VAO;
-  opengl::buffer<GL_ARRAY_BUFFER, float> cube_VBO;
+  opengl::array_buffer<float> cube_VBO;
 
   if (!cube_VBO.write(cube_vertices)) {
     return -1;
@@ -184,38 +102,25 @@ int main() {
   if (!cube_VBO.vertex_attribute_pointer_simple_offset(0, 3, 6, 0)) {
     return -1;
   }
-  if(!cube_VAO.unuse()) {
+  if (!cube_VAO.unuse()) {
     return -1;
   }
 
   std::vector<opengl::program> cube_progs;
 
-  for(auto const &fs_file:{"red","green","yellow","blue"}) {
+  for (auto const &fs_file : {"red", "green", "yellow", "blue"}) {
     opengl::program cube_prog;
 
     if (!cube_prog.attach_shader_file(GL_VERTEX_SHADER, "shader/cube.vs")) {
       return -1;
     }
 
-    if (!cube_prog.attach_shader_file(GL_FRAGMENT_SHADER,
-	  std::string( "shader/")+fs_file+".fs")) {
+    if (!cube_prog.attach_shader_file(
+            GL_FRAGMENT_SHADER, std::string("shader/") + fs_file + ".fs")) {
       return -1;
     }
     cube_prog.set_vertex_array(cube_VAO);
     cube_progs.emplace_back(std::move(cube_prog));
-  }
-
-  auto uniform_buffer_opt=cube_progs[0].get_uniform_block("Matrices");
-  if(!uniform_buffer_opt) {
-    return -1;
-  }
-  auto &uniform_buffer=uniform_buffer_opt.value();
-
-  
-
-
-  if (!cube_prog.set_uniform("cameraPos", scene_camera.get_position())) {
-    return -1;
   }
 
   while (!glfwWindowShouldClose(window)) {
@@ -231,42 +136,35 @@ int main() {
 
     auto view = scene_camera.get_view_matrix();
 
-    if (!cube_prog.set_uniform("model", glm::mat4(1.0f))) {
-      return -1;
-    }
-
-    if (!cube_prog.set_uniform("view", view)) {
+    if (!cube_progs[0].set_uniform_of_block("Matrices", "view", view)) {
       return -1;
     }
 
     auto projection = glm::perspective(
-        scene_camera.get_fov(),
-        static_cast<float>(screen_width) / screen_height, 0.1f, 100.0f);
+        45.0f, static_cast<float>(screen_width) / screen_height, 0.1f, 100.0f);
 
-    if (!cube_prog.set_uniform("projection", projection)) {
+    if (!cube_progs[0].set_uniform_of_block("Matrices", "projection",
+                                            projection)) {
       return -1;
     }
 
+    std::vector<glm::vec3> translations = {
+        glm::vec3(-0.75f, 0.75f, 0.0f), glm::vec3(0.75f, 0.75f, 0.0f),
+        glm::vec3(-0.75f, -0.75f, 0.0f), glm::vec3(0.75f, -0.75f, 0.0f)};
 
-    if (!cube_prog.use()) {
-      return -1;
+    for (size_t i = 0; i < cube_progs.size(); i++) {
+      glm::mat4 model(1.0f);
+      model = glm::translate(model, translations[i]);
+
+      if (!cube_progs[i].set_uniform("model", model)) {
+        return -1;
+      }
+
+      if (!cube_progs[i].use()) {
+        return -1;
+      }
+      glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    if (!skybox_prog.set_uniform("view", glm::mat4(glm::mat3(view)))) {
-      return -1;
-    }
-
-    if (!skybox_prog.set_uniform("projection", projection)) {
-      return -1;
-    }
-
-    skybox_prog.set_vertex_array(skybox_VAO);
-
-    if (!skybox_prog.use()) {
-      return -1;
-    }
-    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
