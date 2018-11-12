@@ -99,7 +99,7 @@ int main() {
   if (!cube_VBO.write(cube_vertices)) {
     return -1;
   }
-  if (!cube_VBO.vertex_attribute_pointer_simple_offset(0, 3, 6, 0)) {
+  if (!cube_VBO.vertex_attribute_pointer_simple_offset(0, 3, 3, 0)) {
     return -1;
   }
   if (!cube_VAO.unuse()) {
